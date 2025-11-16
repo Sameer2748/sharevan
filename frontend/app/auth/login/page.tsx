@@ -103,10 +103,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-[#0F58FF] via-[#1F6CFF] to-[#469BFF] flex justify-center px-0 sm:px-4 py-6">
-      <div className="w-full max-w-[430px] flex flex-col">
+    <div className="h-screen max-h-screen w-full bg-gradient-to-b from-[#0F58FF] via-[#1F6CFF] to-[#469BFF] flex justify-center px-0 sm:px-4 py-4 overflow-hidden">
+      <div className="w-full max-w-[430px] flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-start justify-end px-6 text-white">
+        <div className="flex items-start justify-end px-6 text-white flex-shrink-0">
           <Link
             href={`/auth/login?role=${otherRole}`}
             className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm transition hover:bg-white/20"
@@ -116,10 +116,10 @@ export default function LoginPage() {
         </div>
 
         {/* Illustration */}
-        <div className="relative flex-1 flex items-end justify-center overflow-hidden -mt-2">
-          <div className="absolute top-7 left-0 right-0 flex flex-col items-center gap-1 text-white">
-            <p className="text-[26px] font-semibold tracking-wide">sharevan</p>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-white/75">
+        <div className="relative flex-1 flex items-end justify-center overflow-hidden min-h-0">
+          <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-1 text-white">
+            <p className="text-[22px] sm:text-[26px] font-semibold tracking-wide">sharevan</p>
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] text-white/75">
               Your Logistics Partner
             </p>
           </div>
@@ -127,21 +127,21 @@ export default function LoginPage() {
             src={loginIllustration}
             alt="Sharevan Delivery Partner"
             priority
-            className="h-auto w-[520px] max-w-none translate-y-28 object-contain drop-shadow-2xl"
+            className="h-auto w-[420px] sm:w-[520px] max-w-none translate-y-20 sm:translate-y-28 object-contain drop-shadow-2xl"
           />
         </div>
 
         {/* Card */}
-        <div className="relative -mt-16 w-full rounded-t-3xl bg-white px-6 pt-7 pb-5 shadow-[0_-18px_40px_rgba(15,88,255,0.25)] space-y-5">
+        <div className="relative -mt-12 sm:-mt-16 w-full rounded-t-3xl bg-white px-6 pt-6 pb-4 shadow-[0_-18px_40px_rgba(15,88,255,0.25)] space-y-4 flex-shrink-0 max-h-[50vh] overflow-y-auto">
           <div className="space-y-1 text-center">
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
               {step === 'phone'
                 ? role === 'USER'
                   ? 'Welcome to Share Van'
                   : 'Welcome Driver Partner'
                 : 'Enter OTP'}
             </h1>
-            <p className="text-base text-gray-500">
+            <p className="text-sm sm:text-base text-gray-500">
               {step === 'phone'
                 ? 'Enter your mobile number to continue'
                 : `Code sent to +91 ${mobile}`}
@@ -149,7 +149,7 @@ export default function LoginPage() {
           </div>
 
           {step === 'phone' ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <div className="flex rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition">
                 <span className="flex items-center px-4 text-sm font-semibold text-gray-600">+91</span>
                 <input
@@ -238,7 +238,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="space-y-1.5 text-center text-xs text-gray-500">
+          <div className="space-y-1 text-center text-[11px] text-gray-500">
             {role === 'DRIVER' ? (
               <p>
                 New to Share Van?{' '}

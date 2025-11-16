@@ -222,19 +222,22 @@ export default function UserDashboard() {
           </div>
 
           <div className="relative mt-4 flex items-center h-[200px] overflow-visible">
-            {/* Hero Image on LEFT - Fixed position, won't move on resize */}
-            <Image
-              src={dashboardHero}
-              alt="Sharevan Hero"
-              className="absolute left-[-112px] bottom-[-110px] w-[380px] h-auto object-contain z-0 pointer-events-none"
+            {/* Hero Image on LEFT - Fixed position with responsive bottom */}
+            <div
+              className="absolute pointer-events-none z-0"
               style={{
-                position: 'absolute',
                 left: '-112px',
-                bottom: '-110px',
+                bottom: '-110px', // Raised higher to prevent going under on small screens
                 width: '380px',
               }}
-              priority
-            />
+            >
+              <Image
+                src={dashboardHero}
+                alt="Sharevan Hero"
+                className="w-full h-auto object-contain"
+                priority
+              />
+            </div>
 
             {/* Text Content on RIGHT - Responsive font size */}
             <div className="ml-auto space-y-1 -mt-8 relative z-10">
