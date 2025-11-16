@@ -1,0 +1,397 @@
+// Sharevan Database Schema
+// This schema defines the complete data model for the delivery platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  USER
+  DRIVER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING                // Order created, waiting for driver search
+  SEARCHING_DRIVER       // Actively looking for available drivers
+  DRIVER_ASSIGNED        // Driver accepted the order
+  DRIVER_ARRIVED         // Driver reached pickup location
+  PICKED_UP              // Package picked up (OTP verified)
+  IN_TRANSIT             // On the way to delivery
+  REACHED_DESTINATION    // Driver reached delivery location
+  DELIVERED              // Successfully delivered (OTP verified)
+  CANCELLED              // Order cancelled
+}
+
+enum BookingType {
+  URGENT      // Immediate delivery
+  SCHEDULED   // Scheduled for later
+}
+
+enum PackageSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum DriverStatus {
+  PENDING_VERIFICATION   // Documents submitted, awaiting approval
+  VERIFIED               // Approved and can take orders
+  REJECTED               // Application rejected
+  SUSPENDED              // Temporarily blocked
+}
+
+enum VehicleType {
+  BIKE
+  SCOOTER
+  CAR
+  VAN
+  TRUCK
+}
+
+// ============================================================================
+// USER MODEL
+// ============================================================================
+
+model User {
+  id            String   @id @default(cuid())
+  mobile        String   @unique
+  name          String?
+  email         String?  @unique
+  profileImage  String?
+  role          UserRole @default(USER)
+  isVerified    Boolean  @default(false)
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  orders        Order[]  @relation("UserOrders")
+  savedAddresses SavedAddress[]
+  otpAttempts   OTPAttempt[]
+  notifications Notification[]
+
+  @@index([mobile])
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================================================
+// DRIVER MODEL
+// ============================================================================
+
+model Driver {
+  id              String       @id @default(cuid())
+  mobile          String       @unique
+  name            String
+  email           String?      @unique
+  profileImage    String?
+
+  // Vehicle Information
+  vehicleType     VehicleType
+  vehicleNumber   String       @unique
+  vehicleModel    String?
+  vehicleColor    String?
+
+  // Documentation (S3 URLs)
+  licenseNumber   String       @unique
+  licenseImage    String?      // S3 URL
+  vehicleRegImage String?      // S3 URL for vehicle registration
+  aadharNumber    String?      @unique
+  aadharImage     String?      // S3 URL
+  panNumber       String?      @unique
+  panImage        String?      // S3 URL
+
+  // Driver Status & Performance
+  status          DriverStatus @default(PENDING_VERIFICATION)
+  isOnline        Boolean      @default(false)
+  rating          Float        @default(0)
+  totalRatings    Int          @default(0)
+  totalEarnings   Float        @default(0)
+  totalOrders     Int          @default(0)
+
+  // Current Location (for real-time tracking)
+  currentLat      Float?
+  currentLng      Float?
+  lastLocationUpdate DateTime?
+
+  // Verification
+  verifiedAt      DateTime?
+  verifiedBy      String?      // Admin ID who verified
+  rejectionReason String?
+
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  orders          Order[]      @relation("DriverOrders")
+  earnings        Earning[]
+  otpAttempts     OTPAttempt[]
+  notifications   Notification[]
+  reviews         Review[]
+
+  @@index([mobile])
+  @@index([status])
+  @@index([isOnline])
+  @@index([currentLat, currentLng])
+  @@map("drivers")
+}
+
+// ============================================================================
+// ORDER MODEL (Core Business Logic)
+// ============================================================================
+
+model Order {
+  id                    String       @id @default(cuid())
+  orderNumber           String       @unique @default(cuid())
+
+  // User & Driver Assignment
+  userId                String
+  driverId              String?
+
+  // Pickup Details
+  pickupAddress         String
+  pickupLat             Float
+  pickupLng             Float
+  pickupContactName     String?
+  pickupContactMobile   String?
+
+  // Delivery Details
+  deliveryAddress       String
+  deliveryLat           Float
+  deliveryLng           Float
+  receiverName          String
+  receiverMobile        String
+
+  // Package Information
+  packageSize           PackageSize
+  packageWeight         Float        // in kg
+  packageDescription    String?
+  packageImages         String[]     @default([]) // Array of S3 image URLs
+  specialInstructions   String?
+
+  // Booking Details
+  bookingType           BookingType
+  scheduledDate         DateTime?
+  scheduledTimeSlot     String?      // e.g., "09:00-10:00"
+
+  // Order Status & Tracking
+  status                OrderStatus  @default(PENDING)
+
+  // Distance & Pricing
+  distance              Float?       // in kilometers
+  estimatedDuration     Int?         // in minutes
+  estimatedPrice        Float
+  finalPrice            Float?
+
+  // OTP for Security
+  pickupOtp             String?
+  deliveryOtp           String?
+  pickupOtpVerified     Boolean      @default(false)
+  deliveryOtpVerified   Boolean      @default(false)
+
+  // Proof of Delivery
+  proofOfDeliveryUrl    String?      // S3 URL of delivery proof image
+  deliveryNotes         String?
+
+  // Timestamps for each status
+  driverAssignedAt      DateTime?
+  driverArrivedAt       DateTime?
+  pickedUpAt            DateTime?
+  inTransitAt           DateTime?
+  reachedDestinationAt  DateTime?
+  deliveredAt           DateTime?
+
+  // Cancellation
+  cancelledAt           DateTime?
+  cancelledBy           String?      // USER or DRIVER
+  cancellationReason    String?
+
+  // Race Condition Prevention
+  assignmentAttempts    Int          @default(0)
+  lockedBy              String?      // Driver ID attempting assignment
+  lockedAt              DateTime?
+
+  // Timestamps
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  // Relations
+  user                  User         @relation("UserOrders", fields: [userId], references: [id])
+  driver                Driver?      @relation("DriverOrders", fields: [driverId], references: [id])
+
+  statusHistory         OrderStatusHistory[]
+  review                Review?
+
+  @@index([status, driverId])
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+// ============================================================================
+// ORDER STATUS HISTORY (Audit Trail)
+// ============================================================================
+
+model OrderStatusHistory {
+  id          String       @id @default(cuid())
+  orderId     String
+  status      OrderStatus
+  changedBy   String?      // USER, DRIVER, SYSTEM, or specific ID
+  metadata    Json?        // Additional contextual data
+  timestamp   DateTime     @default(now())
+
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([timestamp])
+  @@map("order_status_history")
+}
+
+// ============================================================================
+// SAVED ADDRESSES
+// ============================================================================
+
+model SavedAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String   // "Home", "Office", "Other"
+  address   String
+  lat       Float
+  lng       Float
+  landmark  String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_addresses")
+}
+
+// ============================================================================
+// REVIEWS & RATINGS
+// ============================================================================
+
+model Review {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  driverId        String
+  rating          Int      // 1-5 stars
+  comment         String?
+  isAnonymous     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver          Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+// ============================================================================
+// EARNINGS (Driver Financial Records)
+// ============================================================================
+
+model Earning {
+  id          String   @id @default(cuid())
+  driverId    String
+  orderId     String   @unique
+  amount      Float
+  commission  Float    // Platform commission
+  netEarning  Float    // Amount paid to driver
+  paidOut     Boolean  @default(false)
+  paidOutAt   DateTime?
+  date        DateTime @default(now())
+
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId, date])
+  @@index([paidOut])
+  @@map("earnings")
+}
+
+// ============================================================================
+// OTP ATTEMPTS (Authentication)
+// ============================================================================
+
+model OTPAttempt {
+  id          String   @id @default(cuid())
+  mobile      String
+  otp         String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  attempts    Int      @default(0)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  userId      String?
+  driverId    String?
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driver      Driver?  @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([mobile, expiresAt])
+  @@index([verified])
+  @@map("otp_attempts")
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String?
+  driverId    String?
+  title       String
+  message     String
+  type        String   // ORDER_UPDATE, PAYMENT, GENERAL, etc.
+  read        Boolean  @default(false)
+  metadata    Json?    // Additional data (orderId, etc.)
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driver      Driver?  @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([driverId, read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================================================
+// PRICE CONFIGURATION (Admin configurable pricing)
+// ============================================================================
+
+model PriceConfig {
+  id                    String   @id @default(cuid())
+  baseFare              Float    @default(30)
+  pricePerKm            Float    @default(10)
+  minDistanceKm         Float    @default(2)
+  smallSizeMultiplier   Float    @default(1.0)
+  mediumSizeMultiplier  Float    @default(1.3)
+  largeSizeMultiplier   Float    @default(1.6)
+  urgentMultiplier      Float    @default(1.5)
+  driverEarningPercent  Float    @default(0.75)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("price_configs")
+}

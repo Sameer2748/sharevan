@@ -1,0 +1,268 @@
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
+import { authAPI } from '@/lib/api'
+import { useAuthStore } from '@/lib/store/authStore'
+import loginIllustration from '@icons/login-person.png'
+
+export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const role = (searchParams.get('role') || 'user').toUpperCase() as 'USER' | 'DRIVER'
+  const otherRole = role === 'USER' ? 'driver' : 'user'
+
+  const [step, setStep] = useState<'phone' | 'otp'>('phone')
+  const [mobile, setMobile] = useState('')
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [loading, setLoading] = useState(false)
+
+  const { login } = useAuthStore()
+
+  const handleSendOTP = async () => {
+    if (mobile.length < 10) {
+      toast.error('Please enter a valid 10-digit mobile number')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await authAPI.sendOTP(`+91${mobile}`, role)
+
+      toast.success('OTP sent to your mobile number')
+
+      setStep('otp')
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Failed to send OTP'
+      toast.error(errorMsg)
+
+      if (role === 'DRIVER' && errorMsg.includes('not found')) {
+        toast.info('New driver? Register first!', { duration: 3000 })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async () => {
+    const otpString = otp.join('')
+    if (otpString.length !== 6) {
+      toast.error('Please enter the 6-digit OTP')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await authAPI.verifyOTP(`+91${mobile}`, otpString, role)
+      const { token, user } = response.data.data
+
+      login(user, token)
+      toast.success('Login successful!')
+
+      if (!user.name) {
+        toast.info('Please complete your profile')
+        router.push('/auth/complete-profile')
+        return
+      }
+
+      if (role === 'USER') {
+        router.push('/user/dashboard')
+      } else {
+        router.push('/driver/dashboard')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Invalid OTP')
+      setOtp(['', '', '', '', '', ''])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) value = value[0]
+
+    const updated = [...otp]
+    updated[index] = value
+    setOtp(updated)
+
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`)
+      nextInput?.focus()
+    }
+  }
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`)
+      prevInput?.focus()
+    }
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-b from-[#0F58FF] via-[#1F6CFF] to-[#469BFF] flex justify-center px-0 sm:px-4 py-6">
+      <div className="w-full max-w-[430px] flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-end px-6 text-white">
+          <Link
+            href={`/auth/login?role=${otherRole}`}
+            className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm transition hover:bg-white/20"
+          >
+            {role === 'USER' ? 'Switch to Driver' : 'Switch to Customer'}
+          </Link>
+        </div>
+
+        {/* Illustration */}
+        <div className="relative flex-1 flex items-end justify-center overflow-hidden -mt-2">
+          <div className="absolute top-7 left-0 right-0 flex flex-col items-center gap-1 text-white">
+            <p className="text-[26px] font-semibold tracking-wide">sharevan</p>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-white/75">
+              Your Logistics Partner
+            </p>
+          </div>
+          <Image
+            src={loginIllustration}
+            alt="Sharevan Delivery Partner"
+            priority
+            className="h-auto w-[520px] max-w-none translate-y-28 object-contain drop-shadow-2xl"
+          />
+        </div>
+
+        {/* Card */}
+        <div className="relative -mt-16 w-full rounded-t-3xl bg-white px-6 pt-7 pb-5 shadow-[0_-18px_40px_rgba(15,88,255,0.25)] space-y-5">
+          <div className="space-y-1 text-center">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {step === 'phone'
+                ? role === 'USER'
+                  ? 'Welcome to Share Van'
+                  : 'Welcome Driver Partner'
+                : 'Enter OTP'}
+            </h1>
+            <p className="text-base text-gray-500">
+              {step === 'phone'
+                ? 'Enter your mobile number to continue'
+                : `Code sent to +91 ${mobile}`}
+            </p>
+          </div>
+
+          {step === 'phone' ? (
+            <div className="space-y-3">
+              <div className="flex rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition">
+                <span className="flex items-center px-4 text-sm font-semibold text-gray-600">+91</span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  autoFocus
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && mobile.length === 10) {
+                      handleSendOTP()
+                    }
+                  }}
+                  placeholder="987 654 3210"
+                  className="flex-1 rounded-r-2xl bg-transparent px-3 py-4 text-base font-medium tracking-wider text-gray-900 outline-none"
+                />
+              </div>
+              <button
+                onClick={handleSendOTP}
+                disabled={loading || mobile.length < 10}
+                className="w-full rounded-full bg-[#0F58FF] py-3 text-base font-semibold text-white shadow-lg shadow-[#0F58FF]/40 transition hover:bg-[#0d4fe0] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Sending OTP...
+                  </span>
+                ) : (
+                  'Verify'
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-3">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`otp-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className="h-14 w-12 rounded-2xl border border-gray-200 bg-gray-50 text-center text-xl font-semibold text-gray-900 shadow-sm focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    autoFocus={index === 0}
+                    autoComplete="off"
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={handleVerifyOTP}
+                disabled={loading || otp.join('').length !== 6}
+                className="w-full rounded-full bg-[#0F58FF] py-3 text-base font-semibold text-white shadow-lg shadow-[#0F58FF]/40 transition hover:bg-[#0d4fe0] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Verifying...
+                  </span>
+                ) : (
+                  'Verify'
+                )}
+              </button>
+
+              <div className="text-center space-y-1.5">
+                <button
+                  onClick={() => {
+                    setStep('phone')
+                    setOtp(['', '', '', '', '', ''])
+                  }}
+                  className="text-sm font-semibold text-[#0F58FF] hover:underline"
+                >
+                  Change Number
+                </button>
+                <button
+                  onClick={handleSendOTP}
+                  disabled={loading}
+                  className="block w-full text-xs font-medium text-gray-500 hover:text-[#0F58FF]"
+                >
+                  Resend OTP
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1.5 text-center text-xs text-gray-500">
+            {role === 'DRIVER' ? (
+              <p>
+                New to Share Van?{' '}
+                <Link href="/auth/register/driver" className="font-semibold text-[#0F58FF] hover:underline">
+                  Register as Driver
+                </Link>
+              </p>
+            ) : (
+              <p>
+                Are you a driver?{' '}
+                <Link href="/auth/login?role=driver" className="font-semibold text-[#0F58FF] hover:underline">
+                  Login here
+                </Link>
+              </p>
+            )}
+            <p>
+              By logging in you agree to our{' '}
+              <Link href="#" className="font-semibold text-[#0F58FF] hover:underline">
+                Terms & Conditions
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
