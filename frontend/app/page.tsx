@@ -2,40 +2,34 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { TruckIcon, UserIcon, MapPinIcon, ZapIcon, User } from 'lucide-react'
+import { TruckIcon, UserIcon, MapPinIcon, ZapIcon, Package } from 'lucide-react'
 import { useAuthStore } from '@/lib/store/authStore'
+import { useEffect } from 'react'
 
 export default function HomePage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, hasHydrated } = useAuthStore()
 
-  const handleProfileClick = () => {
-    if (isAuthenticated) {
-      if (user?.role === 'USER') {
-        router.push('/user/profile')
-      } else if (user?.role === 'DRIVER') {
-        router.push('/driver/profile')
-      } else {
-        router.push('/auth/login')
+  useEffect(() => {
+    if (!hasHydrated) return
+
+    // Redirect authenticated users to their dashboard
+    if (isAuthenticated && user) {
+      if (user.role === 'USER') {
+        router.replace('/user/dashboard')
+      } else if (user.role === 'DRIVER') {
+        router.replace('/driver/dashboard')
       }
-    } else {
-      router.push('/auth/login')
     }
+  }, [isAuthenticated, user, hasHydrated, router])
+
+  // Don't show anything while checking auth
+  if (!hasHydrated || isAuthenticated) {
+    return null
   }
 
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
-      {/* Header with Profile Icon */}
-      <div className="absolute top-0 right-0 p-4">
-        <button
-          onClick={handleProfileClick}
-          className="bg-white/20 backdrop-blur-sm text-white border-2 border-white p-3 rounded-full hover:bg-white/30 transition-all"
-          aria-label="Profile"
-        >
-          <User className="w-6 h-6" />
-        </button>
-      </div>
-
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 text-white">
         <div className="text-center space-y-8 max-w-2xl">

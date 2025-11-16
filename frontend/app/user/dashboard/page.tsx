@@ -221,24 +221,30 @@ export default function UserDashboard() {
             </div>
           </div>
 
-          <div className="relative mt-4 flex items-center h-[200px]">
-            {/* Hero Image on LEFT - Half hidden under white section */}
+          <div className="relative mt-4 flex items-center h-[200px] overflow-visible">
+            {/* Hero Image on LEFT - Fixed position, won't move on resize */}
             <Image
               src={dashboardHero}
               alt="Sharevan Hero"
-              className="absolute left-[-112px] bottom-[-110px] w-[380px] h-auto object-contain z-0"
+              className="absolute left-[-112px] bottom-[-110px] w-[380px] h-auto object-contain z-0 pointer-events-none"
+              style={{
+                position: 'absolute',
+                left: '-112px',
+                bottom: '-110px',
+                width: '380px',
+              }}
               priority
             />
 
-            {/* Text Content on RIGHT - Fixed position */}
-            <div className="ml-auto  space-y-1 -mt-8 relative z-10">
-              <h1 className="text-[18px] font-bold leading-[1.2] text-white">
-                Get Upto <span className="text-[22px] font-bold text-yellow-300 inline-block leading-[1]">50% </span>{' '}Off with
+            {/* Text Content on RIGHT - Responsive font size */}
+            <div className="ml-auto space-y-1 -mt-8 relative z-10">
+              <h1 className="text-[14px] sm:text-[16px] md:text-[18px] font-bold leading-[1.2] text-white">
+                Get Upto <span className="text-[18px] sm:text-[20px] md:text-[22px] font-bold text-yellow-300 inline-block leading-[1]">50% </span>{' '}Off with
                 <span className="block"> Share Van</span>
               </h1>
               <button
                 onClick={() => router.push('/user/booking')}
-                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2 mt-2 text-base font-semibold text-[#0F58FF] shadow-md transition hover:bg-white/90"
+                className="inline-flex items-center justify-center rounded-full bg-white px-4 sm:px-5 py-2 mt-2 text-sm sm:text-base font-semibold text-[#0F58FF] shadow-md transition hover:bg-white/90"
               >
                 Book Now
               </button>
