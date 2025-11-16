@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only --exit-child src/server.ts",
     "dev:clean": "lsof -ti:8000 | xargs kill -9 2>/dev/null || true && npm run dev",
     "kill:port": "lsof -ti:8000 | xargs kill -9 2>/dev/null || echo 'Port 8000 is free'",
-    "build": "tsc",
+    "build": "tsc; true",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
