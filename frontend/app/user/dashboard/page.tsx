@@ -222,14 +222,9 @@ export default function UserDashboard() {
           </div>
 
           <div className="relative mt-4 flex items-center h-[200px] overflow-visible">
-            {/* Hero Image on LEFT - Fixed position with responsive bottom */}
+            {/* Hero Image on LEFT - Responsive size and position based on screen width */}
             <div
-              className="absolute pointer-events-none z-0"
-              style={{
-                left: '-112px',
-                bottom: '-110px', // Raised higher to prevent going under on small screens
-                width: '380px',
-              }}
+              className="absolute pointer-events-none z-0 w-[320px] min-[372px]:w-[380px] -left-[90px] min-[372px]:-left-[112px] -bottom-[86px] min-[372px]:-bottom-[110px]"
             >
               <Image
                 src={dashboardHero}
@@ -270,31 +265,33 @@ export default function UserDashboard() {
           {dashboard?.activeOrders && dashboard.activeOrders.length > 0 && (
             <div>
               <h3 className="text-base font-semibold text-gray-900 mb-3">Your Bookings</h3>
-              {dashboard.activeOrders.map((order: any) => (
-                <button
-                  key={order.id}
-                  onClick={() => router.push(`/user/orders/${order.id}`)}
-                  className="w-full rounded-[28px] bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] p-5 text-left text-white shadow-lg transition hover:shadow-xl"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-white/90 mb-1">
-                        Your Driver is Arriving in {order.eta || '10 Minutes'}
-                      </p>
-                      <p className="text-base font-semibold">
-                        {order.pickupCity || 'Oxford'} → {order.deliveryCity || 'Liverpool'}
-                      </p>
+              <div className="space-y-3">
+                {dashboard.activeOrders.map((order: any) => (
+                  <button
+                    key={order.id}
+                    onClick={() => router.push(`/user/orders/${order.id}`)}
+                    className="w-full rounded-[28px] bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] p-5 text-left text-white shadow-lg transition hover:shadow-xl"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-white/90 mb-1">
+                          Your Driver is Arriving in {order.eta || '10 Minutes'}
+                        </p>
+                        <p className="text-base font-semibold">
+                          {order.pickupCity || 'Oxford'} → {order.deliveryCity || 'Liverpool'}
+                        </p>
+                      </div>
+                      <div className="ml-4">
+                        <Image
+                          src={parcelIcon3}
+                          alt="Delivery Truck"
+                          className="h-16 w-auto object-contain opacity-90"
+                        />
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <Image
-                        src={parcelIcon3}
-                        alt="Delivery Truck"
-                        className="h-16 w-auto object-contain opacity-90"
-                      />
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

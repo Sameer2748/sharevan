@@ -103,7 +103,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="h-screen max-h-screen w-full bg-gradient-to-b from-[#0F58FF] via-[#1F6CFF] to-[#469BFF] flex justify-center px-0 sm:px-4 py-4 overflow-hidden">
+    <div className="h-screen max-h-screen w-full bg-gradient-to-b from-[#0F58FF] via-[#1F6CFF] to-[#469BFF] flex justify-center px-0 sm:px-4 pt-4 overflow-hidden">
       <div className="w-full max-w-[430px] flex flex-col h-full">
         {/* Header */}
         <div className="flex items-start justify-end px-6 text-white flex-shrink-0">

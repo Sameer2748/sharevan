@@ -298,6 +298,9 @@ export default function BookingPage() {
 
   const handleBack = () => {
     switch (currentStep) {
+      case 'locations':
+        router.push('/user/dashboard');
+        break;
       case 'confirmPickup':
         setCurrentStep('locations');
         break;
@@ -320,7 +323,7 @@ export default function BookingPage() {
         router.push('/user/dashboard');
         break;
       default:
-        setCurrentStep('locations');
+        router.push('/user/dashboard');
         break;
     }
   };
@@ -328,7 +331,9 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-[#F6F8FF]">
       {currentStep !== 'driverAssigned' && (
-        <Navbar title="Book Delivery" showBack onBack={handleBack} />
+        <div className="relative z-30">
+          <Navbar title="Book Delivery" showBack onBack={handleBack} />
+        </div>
       )}
 
       {currentStep === 'locations' && (
@@ -619,9 +624,20 @@ export default function BookingPage() {
           pickupLng={formData.pickupLng}
           deliveryLat={formData.deliveryLat}
           deliveryLng={formData.deliveryLng}
-          onCancel={() => {
-            setCurrentStep('priceReview');
-            setDriverSearchProgress(0);
+          onCancel={async () => {
+            try {
+              if (orderId) {
+                await orderAPI.cancelOrder(orderId);
+                toast.success('Order cancelled successfully');
+              }
+            } catch (error) {
+              console.error('Failed to cancel order:', error);
+            } finally {
+              setCurrentStep('priceReview');
+              setDriverSearchProgress(0);
+              setOrderId(null);
+              setOrderSummary(null);
+            }
           }}
         />
       )}
@@ -924,15 +940,15 @@ function DriverSearchMapSection({
   };
 
   return (
-    <div className="fixed inset-0">
-      <div ref={mapContainerRef} className="absolute inset-0" />
+    <div className="fixed inset-0 z-10">
+      <div ref={mapContainerRef} className="absolute inset-0 z-0" />
       {mapLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 rounded-t-[32px] bg-white px-6 pt-5 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
+      <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white px-6 pt-5 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
         <div className="flex items-center justify-center mb-4">
           <div className="text-5xl animate-bounce">🚚</div>
         </div>
@@ -969,15 +985,15 @@ function MapSection({
     : 'https://maps.google.com/maps?q=Oxford%20United%20Kingdom&z=13&output=embed';
 
   return (
-    <div className="fixed inset-0">
+    <div className="fixed inset-0 z-10">
       <iframe
         title="map"
         src={src}
-        className="pointer-events-none absolute inset-0 w-full h-full border-0"
+        className="pointer-events-none absolute inset-0 w-full h-full border-0 z-0"
         loading="lazy"
         allowFullScreen
       />
-      <div className="absolute bottom-0 left-0 right-0 rounded-t-[32px] bg-white px-5 pt-4 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
+      <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white px-5 pt-4 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
         {children}
       </div>
     </div>

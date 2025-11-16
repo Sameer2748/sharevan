@@ -9,9 +9,10 @@ interface NavbarProps {
   title: string;
   showBack?: boolean;
   showProfile?: boolean;
+  onBack?: () => void;
 }
 
-export default function Navbar({ title, showBack = false, showProfile = true }: NavbarProps) {
+export default function Navbar({ title, showBack = false, showProfile = true, onBack }: NavbarProps) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
@@ -26,7 +27,10 @@ export default function Navbar({ title, showBack = false, showProfile = true }: 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {showBack && (
-            <button onClick={() => router.back()} className="p-1 hover:bg-white/20 rounded-lg">
+            <button
+              onClick={onBack ? onBack : () => router.back()}
+              className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
