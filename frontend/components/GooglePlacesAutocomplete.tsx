@@ -65,15 +65,11 @@ export default function GooglePlacesAutocomplete({
     try {
       if (!inputRef.current) return;
 
-      if (!isGoogleMapsLoaded() || !window.google?.maps) {
+      if (!isGoogleMapsLoaded() || !window.google?.maps?.places) {
         throw new Error('Google Maps library not available');
       }
 
-      const { Autocomplete } = (await window.google.maps.importLibrary(
-        'places'
-      )) as google.maps.PlacesLibrary;
-
-      autocompleteRef.current = new Autocomplete(inputRef.current, {
+      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
         componentRestrictions: { country: 'in' },
         fields: ['formatted_address', 'geometry', 'name'],
         types: ['address'],
