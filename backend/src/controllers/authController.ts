@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
 import { env } from '../config/env';
-import { sendOTPToMobile, verifyOTP } from '../services/otpService';
+import { sendOTPToMobile, sendOTPToEmail, verifyOTP, verifyEmailOTP } from '../services/otpService';
 import { sendSuccess, sendError, formatPhoneNumber, isValidPhoneNumber } from '../utils/helpers';
 
 /**
@@ -131,6 +131,156 @@ export const verifyOTPAndLogin = async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('Verify OTP error:', error);
+    return sendError(res, error.message || 'Failed to verify OTP', 500);
+  }
+};
+
+/**
+ * Send OTP to email
+ * POST /api/auth/send-email-otp
+ */
+export const sendEmailOTP = async (req: Request, res: Response) => {
+  try {
+    const { email, role } = req.body;
+
+    // Validate email
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return sendError(res, 'Invalid email address');
+    }
+
+    if (!role || !['USER', 'DRIVER'].includes(role)) {
+      return sendError(res, 'Invalid role. Must be USER or DRIVER');
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user/driver exists, create if not
+    let userId: string | undefined;
+    let driverId: string | undefined;
+
+    if (role === 'USER') {
+      let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+      if (!user) {
+        // Auto-create user on first login
+        user = await prisma.user.create({
+          data: { email: normalizedEmail, role: 'USER', onboardingCompleted: false }
+        });
+      }
+      userId = user.id;
+    } else {
+      let driver = await prisma.driver.findUnique({ where: { email: normalizedEmail } });
+      if (!driver) {
+        // Auto-create driver on first login
+        driver = await prisma.driver.create({
+          data: {
+            email: normalizedEmail,
+            name: '', // Will be filled during onboarding
+            vehicleType: 'BIKE', // Default, will be updated in onboarding
+            vehicleNumber: '', // Will be filled during onboarding
+            licenseNumber: '', // Will be filled during onboarding
+            onboardingCompleted: false,
+          }
+        });
+      }
+      driverId = driver.id;
+    }
+
+    // Send OTP to email
+    const result = await sendOTPToEmail(normalizedEmail, userId, driverId);
+
+    if (!result.success) {
+      return sendError(res, result.message);
+    }
+
+    return sendSuccess(res, {
+      email: normalizedEmail
+    }, 'OTP sent to your email');
+
+  } catch (error: any) {
+    console.error('Send email OTP error:', error);
+    return sendError(res, error.message || 'Failed to send OTP', 500);
+  }
+};
+
+/**
+ * Verify email OTP and login
+ * POST /api/auth/verify-email-otp
+ */
+export const verifyEmailOTPAndLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, otp, role } = req.body;
+
+    if (!email || !otp || !role) {
+      return sendError(res, 'Email, OTP, and role are required');
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Verify OTP
+    const verification = await verifyEmailOTP(normalizedEmail, otp);
+
+    if (!verification.success) {
+      return sendError(res, verification.message, 401);
+    }
+
+    // Get user/driver
+    let user: any;
+    let tokenRole: string;
+
+    if (role === 'USER') {
+      user = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          id: true,
+          email: true,
+          mobile: true,
+          name: true,
+          role: true,
+          profileImage: true,
+          dateOfBirth: true,
+          onboardingCompleted: true
+        }
+      });
+      tokenRole = 'USER';
+    } else {
+      user = await prisma.driver.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          id: true,
+          email: true,
+          mobile: true,
+          name: true,
+          profileImage: true,
+          dateOfBirth: true,
+          status: true,
+          vehicleType: true,
+          vehicleNumber: true,
+          rating: true,
+          isOnline: true,
+          onboardingCompleted: true
+        }
+      });
+      tokenRole = 'DRIVER';
+    }
+
+    if (!user) {
+      return sendError(res, 'User not found', 404);
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: tokenRole },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRES_IN }
+    );
+
+    return sendSuccess(res, {
+      token,
+      user: { ...user, role: tokenRole }
+    }, 'Login successful');
+
+  } catch (error: any) {
+    console.error('Verify email OTP error:', error);
     return sendError(res, error.message || 'Failed to verify OTP', 500);
   }
 };
@@ -370,7 +520,9 @@ export const updateProfile = async (req: Request, res: Response) => {
 
 export default {
   sendOTP,
+  sendEmailOTP,
   verifyOTPAndLogin,
+  verifyEmailOTPAndLogin,
   getCurrentUser,
   logout,
   registerDriver,

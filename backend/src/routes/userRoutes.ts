@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import * as userController from '../controllers/userController';
 import { authenticateToken, requireRole } from '../middleware/auth';
+import { uploadProfileImage } from '../middleware/upload';
 
 const router = Router();
 
 // All routes require authentication and USER role
 router.use(authenticateToken);
 router.use(requireRole('USER'));
+
+/**
+ * @route   POST /api/user/complete-onboarding
+ * @desc    Complete user onboarding (name, mobile, DOB, profile image)
+ * @access  Private (USER)
+ */
+router.post('/complete-onboarding', uploadProfileImage, userController.completeOnboarding);
 
 /**
  * @route   GET /api/user/dashboard

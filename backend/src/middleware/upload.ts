@@ -49,6 +49,15 @@ export const uploadProfilePicture = multer({
   },
 }).single('profilePicture');
 
+// Profile image upload for onboarding
+export const uploadProfileImage = multer({
+  storage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+  },
+}).single('profileImage');
+
 // Delivery proof image upload middleware
 export const uploadDeliveryProof = multer({
   storage,

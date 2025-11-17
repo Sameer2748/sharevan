@@ -1,6 +1,93 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { sendSuccess, sendError } from '../utils/helpers';
+import { uploadToS3 } from '../services/s3Service';
+
+/**
+ * Complete user onboarding
+ * POST /api/user/complete-onboarding
+ */
+export const completeOnboarding = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'USER') {
+      return sendError(res, 'Only users can complete onboarding', 403);
+    }
+
+    const { name, dateOfBirth, mobile, countryCode } = req.body;
+    const file = req.file;
+
+    if (!name || !dateOfBirth) {
+      return sendError(res, 'Name and date of birth are required', 400);
+    }
+
+    let profileImageUrl = null;
+
+    // Upload profile image to S3 if provided
+    if (file) {
+      try {
+        const uploadResult = await uploadToS3(
+          file.buffer,
+          `users/${req.user.id}/profile`,
+          file.originalname,
+          file.mimetype
+        );
+        profileImageUrl = uploadResult.url;
+      } catch (error) {
+        console.error('Failed to upload profile image:', error);
+        // Continue without image if upload fails
+      }
+    }
+
+    // Build update data
+    const updateData: any = {
+      name,
+      dateOfBirth: new Date(dateOfBirth),
+      onboardingCompleted: true,
+    };
+
+    // Add mobile if provided (optional)
+    if (mobile) {
+      const fullMobile = countryCode ? `${countryCode}${mobile}` : mobile;
+
+      // Check if mobile is already taken by another user
+      const existingUser = await prisma.user.findUnique({
+        where: { mobile: fullMobile }
+      });
+
+      if (existingUser && existingUser.id !== req.user.id) {
+        return sendError(res, 'Mobile number already registered', 400);
+      }
+
+      updateData.mobile = fullMobile;
+    }
+
+    // Add profile image if uploaded
+    if (profileImageUrl) {
+      updateData.profileImage = profileImageUrl;
+    }
+
+    // Update user profile
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        mobile: true,
+        email: true,
+        profileImage: true,
+        dateOfBirth: true,
+        role: true,
+        onboardingCompleted: true,
+      },
+    });
+
+    return sendSuccess(res, updatedUser, 'Onboarding completed successfully');
+  } catch (error: any) {
+    console.error('Complete onboarding error:', error);
+    return sendError(res, error.message || 'Failed to complete onboarding', 500);
+  }
+};
 
 /**
  * Get user dashboard data
@@ -427,6 +514,7 @@ export const rateDriver = async (req: Request, res: Response) => {
 };
 
 export default {
+  completeOnboarding,
   getDashboard,
   getProfile,
   updateProfile,

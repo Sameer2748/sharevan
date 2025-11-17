@@ -49,6 +49,14 @@ api.interceptors.response.use(
 // ============================================================================
 
 export const authAPI = {
+  // Email-based OTP (for both USER and DRIVER)
+  sendEmailOTP: (email: string, role: 'USER' | 'DRIVER') =>
+    api.post('/api/auth/send-email-otp', { email, role }),
+
+  verifyEmailOTP: (email: string, otp: string, role: 'USER' | 'DRIVER') =>
+    api.post('/api/auth/verify-email-otp', { email, otp, role }),
+
+  // Legacy mobile-based OTP (kept for backward compatibility)
   sendOTP: (mobile: string, role: 'USER' | 'DRIVER') =>
     api.post('/api/auth/send-otp', { mobile, role }),
 
@@ -71,6 +79,11 @@ export const userAPI = {
 
   updateProfile: (data: { name?: string; email?: string; profileImage?: string }) =>
     api.put('/api/user/profile', data),
+
+  completeOnboarding: (data: FormData) =>
+    api.post('/api/user/complete-onboarding', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   getAddresses: () => api.get('/api/user/addresses'),
 

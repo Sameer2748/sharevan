@@ -5,9 +5,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ChevronDown } from 'lucide-react'
 import { authAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store/authStore'
+import { COUNTRY_CODES, validatePhoneNumber, type CountryCode } from '@/lib/countryCodes'
 import loginIllustration from '@icons/login-person.png'
 
 export default function LoginPage() {
@@ -16,34 +17,39 @@ export default function LoginPage() {
   const role = (searchParams.get('role') || 'user').toUpperCase() as 'USER' | 'DRIVER'
   const otherRole = role === 'USER' ? 'driver' : 'user'
 
-  const [step, setStep] = useState<'email' | 'otp'>('email')
-  const [email, setEmail] = useState('')
+  const [step, setStep] = useState<'phone' | 'otp'>('phone')
+  const [mobile, setMobile] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState<CountryCode>(COUNTRY_CODES[0]) // Default to India
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
 
   const { login } = useAuthStore()
 
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
   const handleSendOTP = async () => {
-    if (!isValidEmail(email)) {
-      toast.error('Please enter a valid email address')
+    // Validate phone number for selected country
+    const validation = validatePhoneNumber(mobile, selectedCountry.dialCode)
+
+    if (!validation.valid) {
+      toast.error(validation.message)
       return
     }
 
     setLoading(true)
     try {
-      await authAPI.sendEmailOTP(email.toLowerCase().trim(), role)
+      const fullPhoneNumber = `${selectedCountry.dialCode}${mobile}`
+      const response = await authAPI.sendOTP(fullPhoneNumber, role)
 
-      toast.success('OTP sent to your email')
+      toast.success('OTP sent to your mobile number')
 
       setStep('otp')
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Failed to send OTP'
       toast.error(errorMsg)
+
+      if (role === 'DRIVER' && errorMsg.includes('not found')) {
+        toast.info('New driver? Register first!', { duration: 3000 })
+      }
     } finally {
       setLoading(false)
     }
@@ -58,16 +64,22 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const response = await authAPI.verifyEmailOTP(email.toLowerCase().trim(), otpString, role)
+      const fullPhoneNumber = `${selectedCountry.dialCode}${mobile}`
+      const response = await authAPI.verifyOTP(fullPhoneNumber, otpString, role)
       const { token, user } = response.data.data
 
       login(user, token)
       toast.success('Login successful!')
 
-      // Check if onboarding is completed
-      if (!user.onboardingCompleted) {
-        toast.info('Please complete your onboarding')
+      // Check if user needs to complete onboarding
+      if (role === 'USER' && !user.onboardingCompleted) {
         router.push('/user/onboarding')
+        return
+      }
+
+      if (!user.name) {
+        toast.info('Please complete your profile')
+        router.push('/auth/complete-profile')
         return
       }
 
@@ -104,6 +116,22 @@ export default function LoginPage() {
     }
   }
 
+  const handleCountrySelect = (country: CountryCode) => {
+    setSelectedCountry(country)
+    setShowCountryDropdown(false)
+    setMobile('') // Clear mobile number when country changes
+  }
+
+  const handleMobileChange = (value: string) => {
+    // Only allow digits
+    const digitsOnly = value.replace(/\D/g, '')
+
+    // Limit to max length for selected country
+    if (digitsOnly.length <= selectedCountry.maxLength) {
+      setMobile(digitsOnly)
+    }
+  }
+
   return (
     <div className="h-screen max-h-screen w-full bg-gradient-to-b from-[#0F58FF] via-[#1F6CFF] to-[#469BFF] flex justify-center px-0 sm:px-4 pt-4 overflow-hidden">
       <div className="w-full max-w-[430px] flex flex-col h-full">
@@ -137,39 +165,89 @@ export default function LoginPage() {
         <div className="relative -mt-12 sm:-mt-16 w-full rounded-t-3xl bg-white px-6 pt-6 pb-4 shadow-[0_-18px_40px_rgba(15,88,255,0.25)] space-y-4 flex-shrink-0 max-h-[50vh] overflow-y-auto">
           <div className="space-y-1 text-center">
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-              {step === 'email'
+              {step === 'phone'
                 ? role === 'USER'
                   ? 'Welcome to Share Van'
                   : 'Welcome Driver Partner'
                 : 'Enter OTP'}
             </h1>
             <p className="text-sm sm:text-base text-gray-500">
-              {step === 'email'
-                ? 'Enter your email address to continue'
-                : `Code sent to ${email}`}
+              {step === 'phone'
+                ? 'Enter your mobile number to continue'
+                : `Code sent to ${selectedCountry.dialCode} ${mobile}`}
             </p>
           </div>
 
-          {step === 'email' ? (
+          {step === 'phone' ? (
             <div className="space-y-2.5">
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition">
+              <div className="flex rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition">
+                {/* Country Code Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                    className="flex items-center gap-1.5 px-3 py-4 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-l-2xl transition"
+                  >
+                    <span className="text-lg">{selectedCountry.flag}</span>
+                    <span>{selectedCountry.dialCode}</span>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  </button>
+
+                  {/* Country Dropdown */}
+                  {showCountryDropdown && (
+                    <>
+                      {/* Backdrop */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowCountryDropdown(false)}
+                      />
+
+                      {/* Dropdown Menu */}
+                      <div className="absolute top-full left-0 mt-2 w-72 max-h-64 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
+                        {COUNTRY_CODES.map((country) => (
+                          <button
+                            key={country.code}
+                            type="button"
+                            onClick={() => handleCountrySelect(country)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition ${
+                              selectedCountry.code === country.code ? 'bg-blue-50' : ''
+                            }`}
+                          >
+                            <span className="text-2xl">{country.flag}</span>
+                            <div className="flex-1 text-left">
+                              <p className="text-sm font-medium text-gray-900">{country.name}</p>
+                              <p className="text-xs text-gray-500">{country.dialCode}</p>
+                            </div>
+                            {selectedCountry.code === country.code && (
+                              <div className="w-2 h-2 rounded-full bg-blue-600" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Mobile Number Input */}
                 <input
-                  type="email"
+                  type="tel"
+                  maxLength={selectedCountry.maxLength}
                   autoFocus
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={mobile}
+                  onChange={(e) => handleMobileChange(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && isValidEmail(email)) {
+                    if (e.key === 'Enter' && mobile.length >= selectedCountry.minLength) {
                       handleSendOTP()
                     }
                   }}
-                  placeholder="your.email@example.com"
-                  className="w-full rounded-2xl bg-transparent px-4 py-4 text-base font-medium text-gray-900 outline-none"
+                  placeholder={`Enter ${selectedCountry.minLength}-digit number`}
+                  className="flex-1 rounded-r-2xl bg-transparent px-3 py-4 text-base font-medium tracking-wider text-gray-900 outline-none"
                 />
               </div>
+
               <button
                 onClick={handleSendOTP}
-                disabled={loading || !isValidEmail(email)}
+                disabled={loading || mobile.length < selectedCountry.minLength}
                 className="w-full rounded-full bg-[#0F58FF] py-3 text-base font-semibold text-white shadow-lg shadow-[#0F58FF]/40 transition hover:bg-[#0d4fe0] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? (
@@ -178,7 +256,7 @@ export default function LoginPage() {
                     Sending OTP...
                   </span>
                 ) : (
-                  'Send OTP'
+                  'Verify'
                 )}
               </button>
             </div>
@@ -220,12 +298,12 @@ export default function LoginPage() {
               <div className="text-center space-y-1.5">
                 <button
                   onClick={() => {
-                    setStep('email')
+                    setStep('phone')
                     setOtp(['', '', '', '', '', ''])
                   }}
                   className="text-sm font-semibold text-[#0F58FF] hover:underline"
                 >
-                  Change Email
+                  Change Number
                 </button>
                 <button
                   onClick={handleSendOTP}

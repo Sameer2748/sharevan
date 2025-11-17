@@ -30,9 +30,15 @@ export default function UserDashboard() {
       return
     }
 
+    // Check if user has completed onboarding
+    if (user && !user.onboardingCompleted) {
+      router.replace('/user/onboarding')
+      return
+    }
+
     fetchDashboard()
     getCurrentLocation()
-  }, [hasHydrated, isAuthenticated, user?.role])
+  }, [hasHydrated, isAuthenticated, user?.role, user?.onboardingCompleted])
 
   const getCurrentLocation = async () => {
     // First try GPS for exact location

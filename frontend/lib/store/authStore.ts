@@ -3,11 +3,13 @@ import { persist } from 'zustand/middleware';
 
 interface User {
   id: string;
-  mobile: string;
-  name?: string;
   email?: string;
+  mobile?: string;
+  name?: string;
   role: 'USER' | 'DRIVER';
   profileImage?: string;
+  dateOfBirth?: string;
+  onboardingCompleted?: boolean;
   [key: string]: any;
 }
 

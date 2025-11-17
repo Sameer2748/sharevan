@@ -25,6 +25,16 @@ interface EnvConfig {
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_NUMBER?: string;
 
+  // Email
+  EMAIL_PROVIDER: string;
+  SES_FROM_EMAIL: string;
+  RESEND_API_KEY?: string;
+  BREVO_API_KEY?: string;
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+  AWS_REGION: string;
+  AWS_S3_BUCKET_NAME: string;
+
   // Cloudinary
   CLOUDINARY_CLOUD_NAME?: string;
   CLOUDINARY_API_KEY?: string;
@@ -77,6 +87,16 @@ export const env: EnvConfig = {
   TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
   TWILIO_PHONE_NUMBER: process.env.TWILIO_PHONE_NUMBER,
+
+  // Email (AWS SES / Resend / Brevo)
+  EMAIL_PROVIDER: getEnv('EMAIL_PROVIDER', 'brevo'),
+  SES_FROM_EMAIL: getEnv('SES_FROM_EMAIL'),
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
+  AWS_ACCESS_KEY_ID: getEnv('AWS_ACCESS_KEY_ID'),
+  AWS_SECRET_ACCESS_KEY: getEnv('AWS_SECRET_ACCESS_KEY'),
+  AWS_REGION: getEnv('AWS_REGION', 'ap-south-1'),
+  AWS_S3_BUCKET_NAME: getEnv('AWS_S3_BUCKET_NAME'),
 
   // Cloudinary
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,

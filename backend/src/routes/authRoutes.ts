@@ -19,6 +19,20 @@ router.post('/send-otp', authController.sendOTP);
 router.post('/verify-otp', authController.verifyOTPAndLogin);
 
 /**
+ * @route   POST /api/auth/send-email-otp
+ * @desc    Send OTP to email (for both USER and DRIVER)
+ * @access  Public
+ */
+router.post('/send-email-otp', authController.sendEmailOTP);
+
+/**
+ * @route   POST /api/auth/verify-email-otp
+ * @desc    Verify email OTP and login
+ * @access  Public
+ */
+router.post('/verify-email-otp', authController.verifyEmailOTPAndLogin);
+
+/**
  * @route   GET /api/auth/me
  * @desc    Get current user
  * @access  Private

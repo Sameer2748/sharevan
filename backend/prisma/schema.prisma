@@ -63,13 +63,15 @@ enum VehicleType {
 // ============================================================================
 
 model User {
-  id            String   @id @default(cuid())
-  mobile        String   @unique
-  name          String?
-  email         String?  @unique
-  profileImage  String?
-  role          UserRole @default(USER)
-  isVerified    Boolean  @default(false)
+  id                  String   @id @default(cuid())
+  email               String   @unique  // PRIMARY IDENTIFIER
+  mobile              String?  @unique  // OPTIONAL (collected in onboarding)
+  name                String?
+  profileImage        String?
+  dateOfBirth         DateTime?
+  role                UserRole @default(USER)
+  isVerified          Boolean  @default(false)
+  onboardingCompleted Boolean  @default(false)
 
   // Timestamps
   createdAt     DateTime @default(now())
@@ -81,8 +83,8 @@ model User {
   otpAttempts   OTPAttempt[]
   notifications Notification[]
 
-  @@index([mobile])
   @@index([email])
+  @@index([mobile])
   @@map("users")
 }
 
@@ -91,11 +93,13 @@ model User {
 // ============================================================================
 
 model Driver {
-  id              String       @id @default(cuid())
-  mobile          String       @unique
-  name            String
-  email           String?      @unique
-  profileImage    String?
+  id                  String       @id @default(cuid())
+  email               String       @unique  // PRIMARY IDENTIFIER
+  mobile              String?      @unique  // OPTIONAL (collected in onboarding)
+  name                String
+  profileImage        String?
+  dateOfBirth         DateTime?
+  onboardingCompleted Boolean      @default(false)
 
   // Vehicle Information
   vehicleType     VehicleType
@@ -331,7 +335,8 @@ model Earning {
 
 model OTPAttempt {
   id          String   @id @default(cuid())
-  mobile      String
+  email       String?  // For email-based OTP
+  mobile      String?  // For mobile-based OTP (legacy drivers)
   otp         String
   expiresAt   DateTime
   verified    Boolean  @default(false)
@@ -346,6 +351,7 @@ model OTPAttempt {
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   driver      Driver?  @relation(fields: [driverId], references: [id], onDelete: Cascade)
 
+  @@index([email, expiresAt])
   @@index([mobile, expiresAt])
   @@index([verified])
   @@map("otp_attempts")
