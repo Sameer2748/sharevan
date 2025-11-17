@@ -150,6 +150,10 @@ export const orderAPI = {
 // ============================================================================
 
 export const driverAPI = {
+  completeOnboarding: (data: FormData) =>
+    api.post('/api/driver/complete-onboarding', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
   getAvailableOrders: () => api.get('/api/driver/orders/available'),
   getActiveOrder: () => api.get('/api/driver/orders/active'),
   acceptOrder: (orderId: string) => api.post(`/api/driver/orders/${orderId}/accept`),

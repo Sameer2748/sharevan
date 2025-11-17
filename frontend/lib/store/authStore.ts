@@ -71,9 +71,16 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updateUser: (updates) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, ...updates } : null,
-        })),
+        set((state) => {
+          const updatedUser = state.user ? { ...state.user, ...updates } : null;
+
+          // Also update localStorage to keep it in sync
+          if (typeof window !== 'undefined' && updatedUser) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+
+          return { user: updatedUser };
+        }),
 
       setHasHydrated: (value) => set({ hasHydrated: value }),
     }),

@@ -96,19 +96,19 @@ model Driver {
   id                  String       @id @default(cuid())
   email               String       @unique  // PRIMARY IDENTIFIER
   mobile              String?      @unique  // OPTIONAL (collected in onboarding)
-  name                String
+  name                String?      // OPTIONAL (collected in onboarding)
   profileImage        String?
   dateOfBirth         DateTime?
   onboardingCompleted Boolean      @default(false)
 
-  // Vehicle Information
-  vehicleType     VehicleType
-  vehicleNumber   String       @unique
+  // Vehicle Information (collected during onboarding)
+  vehicleType     VehicleType?
+  vehicleNumber   String?      @unique
   vehicleModel    String?
   vehicleColor    String?
 
-  // Documentation (S3 URLs)
-  licenseNumber   String       @unique
+  // Documentation (S3 URLs - collected during onboarding)
+  licenseNumber   String?      @unique
   licenseImage    String?      // S3 URL
   vehicleRegImage String?      // S3 URL for vehicle registration
   aadharNumber    String?      @unique

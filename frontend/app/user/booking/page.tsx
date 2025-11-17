@@ -21,6 +21,9 @@ import { orderAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import loginIllustration from '@icons/login-person.png';
+import parcelIcon1 from '@icons/parcel-select-icon-1.jpg';
+import parcelIcon2 from '@icons/parcel-select-icon-2.jpg';
+import parcelIcon3 from '@icons/parcel-select-icon-3.jpg';
 import { initSocket, onDriverAssigned, offEvent } from '@/lib/socket';
 import { loadGoogleMapsScript } from '@/lib/googleMapsLoader';
 
@@ -528,11 +531,11 @@ export default function BookingPage() {
         <MapSection pickup={formData.deliveryAddress}>
           <div className="pb-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Select Your Parcel Size</h2>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               {[
-                { key: 'SMALL', title: 'Small Shipment', subtitle: '2 Boxes', icon: '📦', image: '/box.png' },
-                { key: 'MEDIUM', title: 'Medium Shipment', subtitle: '4 Boxes', icon: '🚚', image: '/van.png' },
-                { key: 'LARGE', title: 'Large Shipment', subtitle: '>10 Boxes', icon: '🚛', image: '/truck.png' },
+                { key: 'SMALL', title: 'Small Shipment', subtitle: '2 Boxes', image: parcelIcon1 },
+                { key: 'LARGE', title: 'Large Shipment', subtitle: '>10 Boxes', image: parcelIcon3 },
+                { key: 'MEDIUM', title: 'Medium Shipment', subtitle: '4 Boxes', image: parcelIcon2 },
               ].map((option) => {
                 const active = formData.packageSize === option.key;
                 return (
@@ -540,24 +543,42 @@ export default function BookingPage() {
                     key={option.key}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, packageSize: option.key as any }));
-                      // Auto-continue after 300ms
-                      setTimeout(() => setCurrentStep('priceReview'), 300);
                     }}
-                    className={`w-full flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all ${
+                    className={`group flex flex-col justify-between overflow-hidden rounded-[26px] p-4 text-left transition-all ${
                       active
-                        ? 'border-[#0F58FF] bg-[#EEF3FF] shadow-lg shadow-[#0F58FF]/20'
-                        : 'border-[#E4E8F7] bg-white hover:border-[#0F58FF]/30'
-                    }`}
+                        ? 'border-2 border-[#0F58FF] bg-[#EEF3FF] shadow-lg shadow-[#0F58FF]/20'
+                        : 'border border-[#E9EEFF] bg-white hover:border-[#0F58FF]/30 hover:shadow-md'
+                    } h-[150px]`}
                   >
-                    <div className="flex-1">
-                      <p className="text-base font-bold text-gray-900">{option.title}</p>
-                      <p className="text-sm text-gray-500 mt-0.5">{option.subtitle}</p>
+                    <div>
+                      <p className={`text-sm font-semibold ${active ? 'text-[#0F58FF]' : 'text-gray-900'}`}>
+                        {option.title}
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-gray-500">{option.subtitle}</p>
                     </div>
-                    <div className="text-5xl">{option.icon}</div>
+                    <div className="flex justify-end">
+                      <Image
+                        src={option.image}
+                        alt={option.title}
+                        className="h-20 w-auto object-contain"
+                      />
+                    </div>
                   </button>
                 );
               })}
             </div>
+            <button
+              onClick={() => {
+                if (!formData.packageSize) {
+                  toast.error('Please select a parcel size');
+                  return;
+                }
+                setCurrentStep('priceReview');
+              }}
+              className="w-full rounded-full bg-[#0F58FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
+            >
+              Continue
+            </button>
           </div>
         </MapSection>
       )}

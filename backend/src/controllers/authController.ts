@@ -170,14 +170,10 @@ export const sendEmailOTP = async (req: Request, res: Response) => {
     } else {
       let driver = await prisma.driver.findUnique({ where: { email: normalizedEmail } });
       if (!driver) {
-        // Auto-create driver on first login
+        // Auto-create driver on first login (vehicle info collected during onboarding)
         driver = await prisma.driver.create({
           data: {
             email: normalizedEmail,
-            name: '', // Will be filled during onboarding
-            vehicleType: 'BIKE', // Default, will be updated in onboarding
-            vehicleNumber: '', // Will be filled during onboarding
-            licenseNumber: '', // Will be filled during onboarding
             onboardingCompleted: false,
           }
         });

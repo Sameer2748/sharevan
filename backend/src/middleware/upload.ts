@@ -21,6 +21,16 @@ const imageFilter = (
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_FILES = 5; // Maximum 5 files per upload
 
+// General upload instance for use with .fields(), .single(), .array()
+export const upload = multer({
+  storage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+    files: 10,
+  },
+});
+
 // Single image upload middleware (accepts 'image' or 'file' field name)
 export const uploadSingleImage = multer({
   storage,

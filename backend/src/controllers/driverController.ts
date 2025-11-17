@@ -3,6 +3,98 @@ import { prisma } from '../config/database';
 import { sendSuccess, sendError } from '../utils/helpers';
 import { calculateDriverEarnings } from '../services/pricingService';
 import { sendSMS } from '../services/smsService';
+import { uploadToS3 } from '../services/s3Service';
+
+/**
+ * Complete driver onboarding
+ * POST /api/driver/complete-onboarding
+ */
+export const completeOnboarding = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'DRIVER') {
+      return sendError(res, 'Only drivers can complete onboarding', 403);
+    }
+
+    const { name, dateOfBirth, mobile, email, licenseNumber, aadharNumber, vehicleType, vehicleNumber, vehicleModel, vehicleColor } = req.body;
+
+    // Validate required fields
+    if (!name || !dateOfBirth || !licenseNumber) {
+      return sendError(res, 'Name, date of birth, and license number are required');
+    }
+
+    // Parse date - handle both DD/MM/YYYY and ISO format
+    let parsedDate: Date;
+    if (dateOfBirth.includes('/')) {
+      // DD/MM/YYYY format
+      const [day, month, year] = dateOfBirth.split('/');
+      parsedDate = new Date(`${year}-${month}-${day}`);
+    } else {
+      // ISO format
+      parsedDate = new Date(dateOfBirth);
+    }
+
+    // Validate the parsed date
+    if (isNaN(parsedDate.getTime())) {
+      return sendError(res, 'Invalid date format. Please use DD/MM/YYYY or YYYY-MM-DD');
+    }
+
+    // Handle file uploads
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    let profileImageUrl, licenseImageUrl, aadharImageUrl, vehicleRegImageUrl;
+
+    if (files?.profileImage?.[0]) {
+      const file = files.profileImage[0];
+      const result = await uploadToS3(file.buffer, 'driver-profiles', file.originalname, file.mimetype);
+      profileImageUrl = result.url;
+    }
+
+    if (files?.licenseImage?.[0]) {
+      const file = files.licenseImage[0];
+      const result = await uploadToS3(file.buffer, 'driver-licenses', file.originalname, file.mimetype);
+      licenseImageUrl = result.url;
+    }
+
+    if (files?.aadharImage?.[0]) {
+      const file = files.aadharImage[0];
+      const result = await uploadToS3(file.buffer, 'driver-documents', file.originalname, file.mimetype);
+      aadharImageUrl = result.url;
+    }
+
+    if (files?.vehicleRegImage?.[0]) {
+      const file = files.vehicleRegImage[0];
+      const result = await uploadToS3(file.buffer, 'driver-vehicles', file.originalname, file.mimetype);
+      vehicleRegImageUrl = result.url;
+    }
+
+    // Update driver with onboarding data
+    const driver = await prisma.driver.update({
+      where: { id: req.user.id },
+      data: {
+        name,
+        dateOfBirth: parsedDate,
+        mobile: mobile || undefined,
+        email: email || req.user.email,
+        licenseNumber: licenseNumber.toUpperCase(),
+        aadharNumber: aadharNumber || undefined,
+        vehicleType: vehicleType || undefined,
+        vehicleNumber: vehicleNumber ? vehicleNumber.toUpperCase() : undefined,
+        vehicleModel: vehicleModel || undefined,
+        vehicleColor: vehicleColor || undefined,
+        profileImage: profileImageUrl || undefined,
+        licenseImage: licenseImageUrl || undefined,
+        aadharImage: aadharImageUrl || undefined,
+        vehicleRegImage: vehicleRegImageUrl || undefined,
+        onboardingCompleted: true,
+        status: 'PENDING_VERIFICATION', // Will be verified by admin
+      },
+    });
+
+    return sendSuccess(res, { driver }, 'Onboarding completed successfully');
+  } catch (error: any) {
+    console.error('Complete onboarding error:', error);
+    return sendError(res, error.message || 'Failed to complete onboarding', 500);
+  }
+};
 
 /**
  * Toggle driver online/offline status
@@ -376,7 +468,7 @@ export const verifyPickupOTP = async (req: Request, res: Response) => {
 
     // Ensure both are strings and compare
     if (String(order.pickupOtp).trim() !== String(otp).trim()) {
-      return sendError(res, 'Invalid OTP', 401);
+      return sendError(res, 'Invalid OTP', 400);
     }
 
     if (order.pickupOtpVerified) {
@@ -464,7 +556,7 @@ export const verifyDeliveryOTP = async (req: Request, res: Response) => {
 
     // Ensure both are strings and compare
     if (String(order.deliveryOtp).trim() !== String(otp).trim()) {
-      return sendError(res, 'Invalid OTP', 401);
+      return sendError(res, 'Invalid OTP', 400);
     }
 
     if (order.deliveryOtpVerified) {

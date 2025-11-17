@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as driverController from '../controllers/driverController';
 import { authenticateToken, requireRole } from '../middleware/auth';
+import { upload } from '../middleware/upload';
 
 const router = Router();
 
@@ -22,6 +23,18 @@ router.put('/:id/verify', driverController.verifyDriver);
 // All routes below require authentication and DRIVER role
 router.use(authenticateToken);
 router.use(requireRole('DRIVER'));
+
+/**
+ * @route   POST /api/driver/complete-onboarding
+ * @desc    Complete driver onboarding with documents
+ * @access  Private (DRIVER)
+ */
+router.post('/complete-onboarding', upload.fields([
+  { name: 'profileImage', maxCount: 1 },
+  { name: 'licenseImage', maxCount: 1 },
+  { name: 'aadharImage', maxCount: 1 },
+  { name: 'vehicleRegImage', maxCount: 1 },
+]), driverController.completeOnboarding);
 
 /**
  * @route   PUT /api/driver/online-status

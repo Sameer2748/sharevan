@@ -66,11 +66,15 @@ export default function LoginPage() {
 
       // Check if onboarding is completed
       if (!user.onboardingCompleted) {
-        toast.info('Please complete your onboarding')
-        router.push('/user/onboarding')
+        if (role === 'USER') {
+          router.push('/user/onboarding')
+        } else {
+          router.push('/driver/onboarding')
+        }
         return
       }
 
+      // Redirect to dashboard based on role
       if (role === 'USER') {
         router.push('/user/dashboard')
       } else {
