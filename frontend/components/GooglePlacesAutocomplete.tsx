@@ -70,9 +70,9 @@ export default function GooglePlacesAutocomplete({
       }
 
       autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-        componentRestrictions: { country: 'in' },
-        fields: ['formatted_address', 'geometry', 'name'],
-        types: ['address'],
+        componentRestrictions: { country: 'gb' },
+        fields: ['formatted_address', 'geometry', 'name', 'address_components'],
+        types: ['geocode'],
       });
 
       autocompleteRef.current.addListener('place_changed', () => {
