@@ -157,6 +157,9 @@ export const driverAPI = {
   getAvailableOrders: () => api.get('/api/driver/orders/available'),
   getActiveOrder: () => api.get('/api/driver/orders/active'),
   acceptOrder: (orderId: string) => api.post(`/api/driver/orders/${orderId}/accept`),
+  rejectOrder: (orderId: string) => api.post(`/api/driver/orders/${orderId}/reject`),
+  cancelOrder: (orderId: string, reason?: string) =>
+    api.post(`/api/driver/orders/${orderId}/cancel`, { reason }),
   updateOrderStatus: (orderId: string, status: string) =>
     api.put(`/api/driver/orders/${orderId}/status`, { status }),
   verifyPickupOtp: (orderId: string, otp: string) =>

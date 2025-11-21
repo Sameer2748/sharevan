@@ -66,6 +66,19 @@ export default function ActiveRideDetailsPage() {
     }
   }
 
+  const handleCancelOrder = async () => {
+    const confirmed = window.confirm('Are you sure you want to cancel this order? It will be reassigned to another driver.')
+    if (!confirmed) return
+
+    try {
+      await driverAPI.cancelOrder(params.id as string, 'Driver cancelled before pickup')
+      toast.success('Order cancelled successfully')
+      router.push('/driver/dashboard')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to cancel order')
+    }
+  }
+
   const handleReachedPickup = async () => {
     try {
       await driverAPI.updateOrderStatus(params.id as string, 'DRIVER_ARRIVED')
@@ -81,6 +94,7 @@ export default function ActiveRideDetailsPage() {
       toast.error('Please upload parcel image')
       return
     }
+    setOtp(['', '', '', '', '', '']) // Clear OTP fields
     setShowPickupOtpModal(true)
   }
 
@@ -111,6 +125,7 @@ export default function ActiveRideDetailsPage() {
   }
 
   const handleConfirmDrop = () => {
+    setOtp(['', '', '', '', '', '']) // Clear OTP fields
     setShowDropOtpModal(true)
   }
 
@@ -306,30 +321,38 @@ export default function ActiveRideDetailsPage() {
         <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm space-y-3">
           <div>
             <p className="text-sm text-gray-500">Distance Between Pickup and Drop</p>
-            <p className="text-gray-900 font-medium">{(order.distance / 1000).toFixed(0)} KM</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {order.distance ? order.distance.toFixed(1) : '0'} KM
+            </p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Parcel Size</p>
-            <p className="text-gray-900 font-medium">
-              {order.packageSize} ({order.packageWeight} kg)
+            <p className="text-lg font-bold text-gray-900">
+              {order.packageSize} ({order.packageWeight || '1'} kg)
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Number of Package</p>
-              <p className="text-gray-900 font-medium">1</p>
+              <p className="text-lg font-bold text-gray-900">1</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Drop of Time</p>
-              <p className="text-red-600 font-medium">Today, {new Date(order.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="text-lg font-bold text-red-600">
+                {order.bookingType === 'URGENT'
+                  ? `Today, ${new Date(order.urgentDeliveryTime || order.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false })}`
+                  : 'Standard'}
+              </p>
             </div>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Fare</p>
-            <p className="text-gray-900 font-bold text-2xl">£{order.totalPrice}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              £{order.finalPrice || order.totalPrice || order.estimatedPrice || '0'}
+            </p>
           </div>
         </div>
 
@@ -367,51 +390,83 @@ export default function ActiveRideDetailsPage() {
 
         {/* Progress Timeline */}
         <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-          <p className="text-sm font-medium text-gray-700 mb-4">Progress</p>
-          <div className="space-y-4">
-            {progress.map((step, index) => (
-              <div key={index} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-4 h-4 rounded-full ${
+          <h2 className="font-semibold text-gray-900 mb-4">Progress</h2>
+          <div className="relative">
+            {progress.map((step, index) => {
+              const nextStep = progress[index + 1];
+              const shouldShowLine = index < progress.length - 1 && step.completed && nextStep?.completed;
+
+              return (
+                <div key={index} className="flex gap-3 relative pb-6 last:pb-0">
+                  {/* Vertical Line - only shows between completed steps */}
+                  {shouldShowLine && (
+                    <div className="absolute left-[11px] top-6 h-full w-[2px] bg-green-500" />
+                  )}
+
+                  {/* Circle */}
+                  <div className="relative z-10 flex-shrink-0">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                       step.completed ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
-                  />
-                  {index < progress.length - 1 && (
-                    <div className={`w-0.5 h-12 ${step.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  )}
+                    }`}>
+                      {step.completed && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className={`font-semibold ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {step.label}
+                    </div>
+                    {step.time && (
+                      <div className="text-sm text-gray-500 mt-0.5">{step.time}</div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 pb-4">
-                  <p className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
-                    {step.label}
-                  </p>
-                  {step.time && (
-                    <p className="text-xs text-gray-500 mt-1">{step.time}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="space-y-3">
           {order.status === 'DRIVER_ASSIGNED' && (
-            <button
-              onClick={handleReachedPickup}
-              className="w-full bg-[#103EF7] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#0D35D1] transition"
-            >
-              Reached Pickup Location
-            </button>
+            <>
+              <button
+                onClick={handleReachedPickup}
+                className="w-full bg-[#103EF7] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#0D35D1] transition"
+              >
+                Reached Pickup Location
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                className="w-full bg-white border-2 border-red-500 text-red-500 py-4 rounded-full font-semibold text-lg hover:bg-red-50 transition"
+              >
+                Cancel Order
+              </button>
+            </>
           )}
 
-          {order.status === 'DRIVER_ARRIVED' && parcelImage && (
-            <button
-              onClick={handleConfirmPickup}
-              className="w-full bg-[#103EF7] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#0D35D1] transition"
-            >
-              Confirm Pickup
-            </button>
+          {order.status === 'DRIVER_ARRIVED' && (
+            <>
+              {parcelImage && (
+                <button
+                  onClick={handleConfirmPickup}
+                  className="w-full bg-[#103EF7] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#0D35D1] transition"
+                >
+                  Confirm Pickup
+                </button>
+              )}
+              <button
+                onClick={handleCancelOrder}
+                className="w-full bg-white border-2 border-red-500 text-red-500 py-4 rounded-full font-semibold text-lg hover:bg-red-50 transition"
+              >
+                Cancel Order
+              </button>
+            </>
           )}
 
           {(order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT') && (

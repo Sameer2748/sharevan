@@ -345,6 +345,121 @@ export const acceptOrder = async (req: Request, res: Response) => {
 };
 
 /**
+ * Reject an order
+ * POST /api/driver/orders/:id/reject
+ */
+export const rejectOrder = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'DRIVER') {
+      return sendError(res, 'Only drivers can reject orders', 403);
+    }
+
+    const { id: orderId } = req.params;
+
+    // Verify order exists and is available
+    const order = await prisma.order.findUnique({
+      where: { id: orderId }
+    });
+
+    if (!order) {
+      return sendError(res, 'Order not found', 404);
+    }
+
+    if (order.status !== 'SEARCHING_DRIVER') {
+      return sendError(res, 'This order is no longer available', 400);
+    }
+
+    // Simply acknowledge the rejection
+    // The frontend handles tracking which orders the driver has rejected
+    return sendSuccess(res, { orderId }, 'Order rejected');
+
+  } catch (error: any) {
+    console.error('Reject order error:', error);
+    return sendError(res, 'Failed to reject order', 500);
+  }
+};
+
+/**
+ * Cancel an assigned order (before pickup)
+ * POST /api/driver/orders/:id/cancel
+ */
+export const cancelAssignedOrder = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'DRIVER') {
+      return sendError(res, 'Only drivers can cancel orders', 403);
+    }
+
+    const { id: orderId } = req.params;
+    const { reason } = req.body;
+
+    // Verify order exists and belongs to this driver
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: { select: { mobile: true, name: true } }
+      }
+    });
+
+    if (!order) {
+      return sendError(res, 'Order not found', 404);
+    }
+
+    if (order.driverId !== req.user.id) {
+      return sendError(res, 'This order is not assigned to you', 403);
+    }
+
+    // Can only cancel before pickup (DRIVER_ASSIGNED or DRIVER_ARRIVED)
+    if (order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT' || order.status === 'REACHED_DESTINATION' || order.status === 'DELIVERED') {
+      return sendError(res, 'Cannot cancel order after pickup', 400);
+    }
+
+    // Update order: unassign driver and set status back to SEARCHING_DRIVER
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        driver: {
+          disconnect: true
+        },
+        status: 'SEARCHING_DRIVER',
+        cancelledBy: 'DRIVER',
+        cancellationReason: reason || 'Driver cancelled before pickup'
+      },
+      include: {
+        user: true
+      }
+    });
+
+    // Notify user via SMS
+    await sendSMS(
+      order.user.mobile,
+      `Your order #${order.orderNumber} is being reassigned. We're finding another driver for you.`
+    );
+
+    // Notify via WebSocket
+    if ((req as any).io) {
+      // Notify user
+      (req as any).io.to(`user-${order.userId}`).emit('order-status-update', {
+        orderId: order.id,
+        status: 'SEARCHING_DRIVER',
+        message: 'Driver cancelled. Finding a new driver for you.',
+        timestamp: new Date()
+      });
+
+      // Broadcast to online drivers that order is available again
+      (req as any).io.to('online-drivers').emit('new-order-available', {
+        orderId: order.id
+      });
+    }
+
+    return sendSuccess(res, updated, 'Order cancelled successfully. It is now available for other drivers.');
+
+  } catch (error: any) {
+    console.error('Cancel assigned order error:', error);
+    return sendError(res, 'Failed to cancel order', 500);
+  }
+};
+
+/**
  * Update order status
  * PUT /api/driver/orders/:id/status
  */

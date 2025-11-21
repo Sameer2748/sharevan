@@ -116,75 +116,22 @@ export default function UserDashboard() {
 
   const getLocationFromIP = async () => {
     try {
-      // Use a free IP geolocation service to get approximate coordinates
-      const response = await fetch('https://ipapi.co/json/')
+      const apiKey = '008929b5aada45279a7b475edc67daa4'
+      const response = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`)
       const data = await response.json()
-      
-      // If we have latitude and longitude, use Google Maps API for accurate location
-      if (data.latitude && data.longitude) {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 
-                      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_FALLBACK || 
-                      'AIzaSyAg1QBIXXbGLiNO26G6GvHQwmdJJ0usUV0'
-        
-        const geocodeResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${data.latitude},${data.longitude}&key=${apiKey}&result_type=locality|administrative_area_level_1|administrative_area_level_2`
-        )
-        
-        const geocodeData = await geocodeResponse.json()
-        
-        if (geocodeData.results && geocodeData.results.length > 0) {
-          // Extract city, state, and country from address components
-          const addressComponents = geocodeData.results[0].address_components
-          let city = ''
-          let state = ''
-          let country = ''
-          
-          for (const component of addressComponents) {
-            // Get city (locality or sublocality)
-            if (!city && (component.types.includes('locality') || component.types.includes('sublocality') || component.types.includes('sublocality_level_1'))) {
-              city = component.long_name
-            }
-            // Get state/province (administrative_area_level_1)
-            if (!state && component.types.includes('administrative_area_level_1')) {
-              state = component.long_name
-            }
-            // Get country
-            if (!country && component.types.includes('country')) {
-              country = component.long_name
-            }
-          }
-          
-          // Format location string based on what we have
-          if (city && state && country) {
-            // Show city and state for better accuracy (e.g., "Gurgaon, Haryana")
-            setCurrentLocation(`${city}, ${state}`)
-            return
-          } else if (city && country) {
-            setCurrentLocation(`${city}, ${country}`)
-            return
-          } else if (state && country) {
-            setCurrentLocation(`${state}, ${country}`)
-            return
-          }
-        }
-      }
-      
-      // Fallback to IP service data if Google Maps API fails
-      if (data.city && data.region && data.country_name) {
-        // For India, show city and state
-        if (data.country_name === 'India') {
-          setCurrentLocation(`${data.city}, ${data.region}`)
-        } else {
-          setCurrentLocation(`${data.city}, ${data.country_name}`)
-        }
-      } else if (data.city && data.country_name) {
+
+      if (data.city && data.country_name) {
         setCurrentLocation(`${data.city}, ${data.country_name}`)
-      } else if (data.region && data.country_name) {
-        setCurrentLocation(`${data.region}, ${data.country_name}`)
+      } else if (data.state_prov && data.country_name) {
+        setCurrentLocation(`${data.state_prov}, ${data.country_name}`)
+      } else if (data.country_name) {
+        setCurrentLocation(data.country_name)
+      } else {
+        setCurrentLocation('United Kingdom')
       }
     } catch (error) {
-      console.warn('Failed to get location from IP:', error)
-      // Keep default location
+      console.error('IP geolocation failed:', error)
+      setCurrentLocation('United Kingdom')
     }
   }
 

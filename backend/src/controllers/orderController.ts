@@ -144,15 +144,23 @@ export const createOrder = async (req: Request, res: Response) => {
     // Broadcast to online drivers via WebSocket
     if ((req as any).io) {
       (req as any).io.to('online-drivers').emit('new-order-alert', {
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        pickupAddress: order.pickupAddress,
-        deliveryAddress: order.deliveryAddress,
-        distance: order.distance,
-        estimatedPrice: order.estimatedPrice,
-        packageSize: order.packageSize,
-        bookingType: order.bookingType
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          pickupAddress: order.pickupAddress,
+          deliveryAddress: order.deliveryAddress,
+          distance: order.distance,
+          estimatedPrice: order.estimatedPrice,
+          totalPrice: order.totalPrice,
+          finalPrice: order.finalPrice,
+          packageSize: order.packageSize,
+          bookingType: order.bookingType,
+          status: order.status,
+          createdAt: order.createdAt,
+          user: order.user
+        }
       });
+      console.log(`📢 Broadcasting new order ${order.orderNumber} to online drivers`);
     }
 
     return sendSuccess(res, order, 'Order created successfully. Searching for drivers...', 201);

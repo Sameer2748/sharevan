@@ -290,42 +290,93 @@ export default function OrderDetailPage() {
       )}
 
       <div className="px-4 py-6 space-y-4">
-        {/* Status Card */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">Order Status</h2>
-            <StatusBadge status={order.status} />
+        {/* Order Info Card */}
+        <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+          {/* Distance */}
+          <div>
+            <p className="text-sm text-gray-500">Distance Between Pickup and Drop</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {order.distance ? order.distance.toFixed(1) : '0'} KM
+            </p>
           </div>
+
+          {/* Parcel Size */}
+          <div>
+            <p className="text-sm text-gray-500">Parcel Size</p>
+            <p className="text-lg font-bold text-gray-900">
+              {order.packageSize} ({order.packageWeight || '1'} kg)
+            </p>
+          </div>
+
+          {/* Number of Packages & Drop Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Number of Package</p>
+              <p className="text-lg font-bold text-gray-900">1</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Drop of Time</p>
+              <p className="text-lg font-bold text-red-600">
+                {order.bookingType === 'URGENT'
+                  ? `Today, ${new Date(order.urgentDeliveryTime || order.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false })}`
+                  : 'Standard'}
+              </p>
+            </div>
+          </div>
+
+          {/* Fare */}
+          <div>
+            <p className="text-sm text-gray-500">Fare</p>
+            <p className="text-3xl font-bold text-gray-900">
+              £{order.finalPrice || order.totalPrice || order.estimatedPrice || '0'}
+            </p>
+          </div>
+        </div>
+
+        {/* Progress Card */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h2 className="font-semibold text-gray-900 mb-4">Progress</h2>
 
           {/* Status Timeline */}
           <div className="relative">
-            {getStatusSteps().filter(step => step.completed || step.active).map((step, index, arr) => (
-              <div key={step.key} className="flex gap-3 relative">
-                {/* Vertical Line */}
-                {index < arr.length - 1 && (
-                  <div className="absolute left-[5px] top-3 bottom-0 w-[2px] bg-primary" />
-                )}
+            {getStatusSteps().map((step, index, arr) => {
+              const nextStep = arr[index + 1];
+              const shouldShowLine = index < arr.length - 1 && step.completed && nextStep?.completed;
 
-                {/* Circle */}
-                <div className="relative z-10 flex-shrink-0">
-                  <div className={`w-3 h-3 rounded-full ${
-                    step.completed ? 'bg-primary' : 'bg-gray-300'
-                  }`} />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 pb-6">
-                  <div className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-500'}`}>
-                    {step.label}
-                  </div>
-                  {step.time && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      {formatDateTime(step.time)}
-                    </div>
+              return (
+                <div key={step.key} className="flex gap-3 relative pb-6 last:pb-0">
+                  {/* Vertical Line - only shows between completed steps */}
+                  {shouldShowLine && (
+                    <div className="absolute left-[11px] top-6 h-full w-[2px] bg-green-500" />
                   )}
+
+                  {/* Circle */}
+                  <div className="relative z-10 flex-shrink-0">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      step.completed ? 'bg-green-500' : 'bg-gray-300'
+                    }`}>
+                      {step.completed && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className={`font-semibold ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {step.label}
+                    </div>
+                    {step.time && (
+                      <div className="text-sm text-gray-500 mt-0.5">
+                        {formatDateTime(step.time)}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -402,7 +453,7 @@ export default function OrderDetailPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Distance</span>
-              <span className="font-medium">{order.distance?.toFixed(1)} km</span>
+              <span className="font-medium">{order.distance ? order.distance.toFixed(1) : '0'} km</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Type</span>

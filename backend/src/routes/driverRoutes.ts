@@ -65,6 +65,20 @@ router.get('/orders/active', driverController.getActiveOrder);
 router.post('/orders/:id/accept', driverController.acceptOrder);
 
 /**
+ * @route   POST /api/driver/orders/:id/reject
+ * @desc    Reject an order
+ * @access  Private (DRIVER)
+ */
+router.post('/orders/:id/reject', driverController.rejectOrder);
+
+/**
+ * @route   POST /api/driver/orders/:id/cancel
+ * @desc    Cancel an assigned order (before pickup)
+ * @access  Private (DRIVER)
+ */
+router.post('/orders/:id/cancel', driverController.cancelAssignedOrder);
+
+/**
  * @route   PUT /api/driver/orders/:id/status
  * @desc    Update order status
  * @access  Private (DRIVER)
