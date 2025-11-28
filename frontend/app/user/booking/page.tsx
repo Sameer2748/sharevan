@@ -800,7 +800,7 @@ export default function BookingPage() {
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Charges*</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {priceLoading ? '...' : `£${priceEstimate?.total || 0}`}
+                    {priceLoading ? '...' : `£${priceEstimate?.estimatedPrice || priceEstimate?.breakdown?.total || 0}`}
                   </p>
                   <button
                     onClick={() => setShowPriceBreakdown(true)}

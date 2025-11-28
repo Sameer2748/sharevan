@@ -176,6 +176,8 @@ export const driverAPI = {
       proofOfDeliveryUrl,
     }),
   getEarnings: (range: string) => api.get(`/api/driver/earnings?range=${range}`),
+  getOrderHistory: (status?: string) =>
+    api.get(`/api/driver/orders/history${status ? `?status=${status}` : ''}`),
   toggleOnlineStatus: (isOnline: boolean) =>
     api.put('/api/driver/online-status', { isOnline }),
   updateProfile: (payload: any) => api.put('/api/driver/profile', payload),

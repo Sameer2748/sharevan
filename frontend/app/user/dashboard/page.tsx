@@ -10,6 +10,7 @@ import { userAPI } from '@/lib/api'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import StatusBadge from '@/components/shared/StatusBadge'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import { initSocket, onDriverLocation, trackOrder, untrackOrder } from '@/lib/socket'
 import dashboardHero from '@icons/user-dashboard-top.png'
 import parcelIcon1 from '@icons/parcel-select-icon-1.jpg'
 import parcelIcon2 from '@icons/parcel-select-icon-2.jpg'
@@ -17,10 +18,11 @@ import parcelIcon3 from '@icons/parcel-select-icon-3.jpg'
 
 export default function UserDashboard() {
   const router = useRouter()
-  const { user, isAuthenticated, hasHydrated } = useAuthStore()
+  const { user, isAuthenticated, hasHydrated, token } = useAuthStore()
   const [dashboard, setDashboard] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentLocation, setCurrentLocation] = useState<string>('Oxford, United Kingdom')
+  const [driverEtas, setDriverEtas] = useState<{[key: string]: {minutes: number, text: string}}>({})
 
   useEffect(() => {
     if (!hasHydrated) return
@@ -38,7 +40,94 @@ export default function UserDashboard() {
 
     fetchDashboard()
     getCurrentLocation()
-  }, [hasHydrated, isAuthenticated, user?.role, user?.onboardingCompleted])
+
+    // Initialize socket for active orders
+    if (token) {
+      initSocket(token)
+    }
+  }, [hasHydrated, isAuthenticated, user?.role, user?.onboardingCompleted, token])
+
+  // Track active orders for live driver location
+  useEffect(() => {
+    if (!dashboard?.activeOrders || dashboard.activeOrders.length === 0) return
+
+    // Track all active orders
+    dashboard.activeOrders.forEach((order: any) => {
+      if (order.driver && order.driver.currentLat && order.driver.currentLng) {
+        trackOrder(order.id)
+      }
+    })
+
+    // Listen for driver location updates
+    const handleDriverLocation = (data: any) => {
+      const { orderId, location, eta } = data
+      if (eta && eta.type === 'pickup') {
+        setDriverEtas(prev => ({
+          ...prev,
+          [orderId]: {
+            minutes: eta.minutes,
+            text: eta.minutes === 1 ? '1 Minute' : `${eta.minutes} Minutes`
+          }
+        }))
+      }
+    }
+
+    onDriverLocation(handleDriverLocation)
+
+    // Calculate initial ETAs for all active orders
+    dashboard.activeOrders.forEach((order: any) => {
+      if (order.driver && order.driver.currentLat && order.driver.currentLng) {
+        calculateETA(order)
+      }
+    })
+
+    return () => {
+      // Cleanup: untrack orders
+      dashboard.activeOrders.forEach((order: any) => {
+        untrackOrder(order.id)
+      })
+    }
+  }, [dashboard?.activeOrders])
+
+  const calculateETA = async (order: any) => {
+    if (!order.driver || !order.driver.currentLat || !order.driver.currentLng) return
+    if (!order.pickupLat || !order.pickupLng) return
+
+    try {
+      const google = (window as any).google
+      if (!google) return
+
+      const directionsService = new google.maps.DirectionsService()
+
+      const request = {
+        origin: { lat: order.driver.currentLat, lng: order.driver.currentLng },
+        destination: { lat: order.pickupLat, lng: order.pickupLng },
+        travelMode: google.maps.TravelMode.DRIVING,
+        drivingOptions: {
+          departureTime: new Date(),
+          trafficModel: google.maps.TrafficModel.BEST_GUESS
+        }
+      }
+
+      directionsService.route(request, (result: any, status: any) => {
+        if (status === google.maps.DirectionsStatus.OK && result.routes[0]) {
+          const durationInSeconds = result.routes[0].legs[0].duration_in_traffic?.value ||
+                                    result.routes[0].legs[0].duration.value
+          const minutes = Math.ceil(durationInSeconds / 60)
+
+          setDriverEtas(prev => ({
+            ...prev,
+            [order.id]: {
+              minutes,
+              text: minutes === 1 ? '1 Minute' : `${minutes} Minutes`
+            }
+          }))
+        }
+      })
+    } catch (error) {
+      console.error('ETA calculation error:', error)
+    }
+  }
 
   const getCurrentLocation = async () => {
     // First try GPS for exact location
@@ -228,10 +317,10 @@ export default function UserDashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-white/90 mb-1">
-                          Your Driver is Arriving in {order.eta || '10 Minutes'}
+                          #{order.orderNumber}
                         </p>
                         <p className="text-base font-semibold">
-                          {order.pickupCity || 'Oxford'} → {order.deliveryCity || 'Liverpool'}
+                          {order.pickupAddress?.split(',')[0] || 'Pickup'} → {order.deliveryAddress?.split(',')[0] || 'Delivery'}
                         </p>
                       </div>
                       <div className="ml-4">

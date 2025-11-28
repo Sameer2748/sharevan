@@ -58,6 +58,13 @@ router.get('/orders/available', driverController.getAvailableOrders);
 router.get('/orders/active', driverController.getActiveOrder);
 
 /**
+ * @route   GET /api/driver/orders/history
+ * @desc    Get driver's order history (completed & cancelled)
+ * @access  Private (DRIVER)
+ */
+router.get('/orders/history', driverController.getDriverOrderHistory);
+
+/**
  * @route   POST /api/driver/orders/:id/accept
  * @desc    Accept order (with race condition handling)
  * @access  Private (DRIVER)

@@ -870,6 +870,51 @@ export const getActiveOrder = async (req: Request, res: Response) => {
 };
 
 /**
+ * Get driver order history
+ * GET /api/driver/orders/history
+ */
+export const getDriverOrderHistory = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'DRIVER') {
+      return sendError(res, 'Only drivers can view order history', 403);
+    }
+
+    const { status } = req.query;
+
+    const where: any = {
+      driverId: req.user.id,
+      status: {
+        in: ['DELIVERED', 'CANCELLED']
+      }
+    };
+
+    // Filter by status if provided
+    if (status === 'completed') {
+      where.status = 'DELIVERED';
+    } else if (status === 'cancelled') {
+      where.status = 'CANCELLED';
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, name: true, mobile: true }
+        }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 50
+    });
+
+    return sendSuccess(res, { orders });
+
+  } catch (error: any) {
+    console.error('Get driver order history error:', error);
+    return sendError(res, error.message || 'Failed to get order history', 500);
+  }
+};
+
+/**
  * Update driver profile
  * PUT /api/driver/profile
  */

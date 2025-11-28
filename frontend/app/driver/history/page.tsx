@@ -30,19 +30,10 @@ export default function DriverHistoryPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await driverAPI.getEarnings();
+      const response = await driverAPI.getOrderHistory(filter === 'all' ? undefined : filter);
       const allOrders = response.data.data.orders || [];
 
-      let filtered = allOrders;
-      if (filter === 'completed') {
-        filtered = allOrders.filter((order: any) => order.status === 'DELIVERED');
-      } else if (filter === 'cancelled') {
-        filtered = allOrders.filter((order: any) =>
-          order.status === 'CANCELLED' || order.cancelledBy
-        );
-      }
-
-      setOrders(filtered);
+      setOrders(allOrders);
     } catch (error: any) {
       toast.error('Failed to load orders');
     } finally {
@@ -147,7 +138,7 @@ export default function DriverHistoryPage() {
                     <span className="text-gray-600 capitalize">{order.packageSize}</span>
                     <span className="text-gray-300">•</span>
                     <span className="text-gray-600">
-                      {order.distance ? (order.distance / 1000).toFixed(1) : '0.0'} km
+                      {order.distance ? order.distance.toFixed(1) : '0.0'} miles
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
