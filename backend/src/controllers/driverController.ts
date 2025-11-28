@@ -4,6 +4,7 @@ import { sendSuccess, sendError } from '../utils/helpers';
 import { calculateDriverEarnings } from '../services/pricingService';
 import { sendSMS } from '../services/smsService';
 import { uploadToS3 } from '../services/s3Service';
+import { calculateRoute } from '../services/mapService';
 
 /**
  * Complete driver onboarding
@@ -285,11 +286,32 @@ export const acceptOrder = async (req: Request, res: Response) => {
       timeout: 10000  // Transaction timeout 10 seconds
     });
 
+    // Calculate initial ETA from driver's current location to pickup
+    let pickupEtaMinutes = result.estimatedDuration || 30; // Default fallback
+    try {
+      const driverLocation = await prisma.driver.findUnique({
+        where: { id: driverId },
+        select: { currentLat: true, currentLng: true }
+      });
+
+      if (driverLocation && driverLocation.currentLat && driverLocation.currentLng) {
+        const route = await calculateRoute(
+          { lat: driverLocation.currentLat, lng: driverLocation.currentLng },
+          { lat: result.pickupLat, lng: result.pickupLng }
+        );
+        pickupEtaMinutes = Math.ceil(route.duration + 2); // Add 2 min buffer
+      }
+    } catch (err) {
+      console.error('Error calculating initial pickup ETA:', err);
+    }
+
+    const estimatedPickupTime = new Date(Date.now() + pickupEtaMinutes * 60 * 1000);
+
     // Send notifications
     // SMS to user
     await sendSMS(
       result.user.mobile,
-      `Driver ${driver.name} (${driver.vehicleNumber}) has been assigned to your order #${result.orderNumber}. Track your delivery in the app.`
+      `Driver ${driver.name} (${driver.vehicleNumber}) has been assigned to your order #${result.orderNumber}. Estimated arrival in ${pickupEtaMinutes} minutes. Track your delivery in the app.`
     );
 
     // WebSocket notifications
@@ -301,7 +323,11 @@ export const acceptOrder = async (req: Request, res: Response) => {
         status: result.status,
         pickupOtp: result.pickupOtp,
         deliveryOtp: result.deliveryOtp,
-        etaMinutes: result.estimatedDuration,
+        eta: {
+          minutes: pickupEtaMinutes,
+          type: 'pickup',
+          estimatedArrivalTime: estimatedPickupTime.toISOString()
+        },
         driver: {
           id: result.driver?.id,
           name: result.driver?.name,
@@ -742,7 +768,7 @@ export const verifyDeliveryOTP = async (req: Request, res: Response) => {
     return sendSuccess(res, {
       order: result,
       earnings: earnings.netEarning
-    }, `Delivery completed! You earned ₹${earnings.netEarning}`);
+    }, `Delivery completed! You earned £${earnings.netEarning}`);
 
   } catch (error: any) {
     console.error('Verify delivery error:', error);

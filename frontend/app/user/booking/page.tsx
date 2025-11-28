@@ -39,7 +39,7 @@ const locationSuggestions: LocationSuggestion[] = [
   { label: 'Edinburgh, United Kingdom', lat: 55.9533, lng: -3.1883 },
 ];
 
-type BookingType = 'PICK_NOW' | 'SCHEDULED' | 'URGENT';
+type BookingType = 'URGENT' | 'SAME_DAY_DELIVERY' | 'SCHEDULED';
 type Step =
   | 'locations'
   | 'confirmPickup'
@@ -62,7 +62,7 @@ export default function BookingPage() {
 
   const [authChecking, setAuthChecking] = useState(true);
   const [currentStep, setCurrentStep] = useState<Step>('locations');
-  const [bookingType, setBookingType] = useState<BookingType>('PICK_NOW');
+  const [bookingType, setBookingType] = useState<BookingType>('URGENT');
   const [scheduleDetails, setScheduleDetails] = useState<ScheduleDetails>({ date: '', time: '' });
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
@@ -86,6 +86,16 @@ export default function BookingPage() {
     specialInstructions: '',
     scheduledDate: '',
     scheduledTimeSlot: '',
+    // New fields for enhanced pricing
+    numberOfHelpers: 0,
+    pickupFloors: 0,
+    pickupHasLift: true,
+    dropFloors: 0,
+    dropHasLift: true,
+    needsStorage: false,
+    storageStartDate: '',
+    storageEndDate: '',
+    includesInsurance: true,
   });
 
   const [activeLocationField, setActiveLocationField] = useState<'pickup' | 'drop'>('pickup');
@@ -105,6 +115,26 @@ export default function BookingPage() {
       setAuthChecking(false);
       if (token) {
         initSocket(token);
+      }
+
+      // Check for saved booking data from public booking page
+      const savedBooking = localStorage.getItem('pendingBooking');
+      if (savedBooking) {
+        try {
+          const data = JSON.parse(savedBooking);
+          setFormData(data.formData);
+          setBookingType(data.bookingType);
+          setScheduleDetails(data.scheduleDetails);
+          setCurrentStep(data.currentStep || 'priceReview');
+          setPriceEstimate(data.priceEstimate);
+
+          // Clear the saved booking data
+          localStorage.removeItem('pendingBooking');
+
+          toast.success('Your booking details have been restored. You can now complete your order!');
+        } catch (error) {
+          console.error('Failed to restore booking data:', error);
+        }
       }
     }
   }, [hasHydrated, isAuthenticated, router, token]);
@@ -227,13 +257,25 @@ export default function BookingPage() {
         deliveryLat: formData.deliveryLat,
         deliveryLng: formData.deliveryLng,
         packageSize: formData.packageSize,
-        bookingType: bookingType === 'PICK_NOW' ? 'URGENT' : bookingType,
+        bookingType: bookingType,
+        dropPostcode: formData.receiverPostalCode,
+        dropAddress: formData.deliveryAddress,
+        numberOfHelpers: formData.numberOfHelpers,
+        pickupFloors: formData.pickupFloors,
+        pickupHasLift: formData.pickupHasLift,
+        dropFloors: formData.dropFloors,
+        dropHasLift: formData.dropHasLift,
+        needsStorage: formData.needsStorage,
+        storageStartDate: formData.storageStartDate,
+        storageEndDate: formData.storageEndDate,
+        includesInsurance: formData.includesInsurance,
         scheduledDate: scheduleDetails.date,
         scheduledTimeSlot: scheduleDetails.time,
       });
       setPriceEstimate(response.data.data);
-    } catch (error) {
-      toast.error('Failed to fetch price estimate');
+    } catch (error: any) {
+      console.error('Price fetch error:', error);
+      toast.error(error.response?.data?.error || 'Failed to fetch price estimate');
     } finally {
       setPriceLoading(false);
     }
@@ -265,6 +307,16 @@ export default function BookingPage() {
         bookingType: bookingType === 'PICK_NOW' ? 'URGENT' : bookingType,
         scheduledDate: scheduleDetails.date,
         scheduledTimeSlot: scheduleDetails.time,
+        // Include all pricing parameters to ensure price consistency
+        numberOfHelpers: formData.numberOfHelpers,
+        pickupFloors: formData.pickupFloors,
+        pickupHasLift: formData.pickupHasLift,
+        dropFloors: formData.dropFloors,
+        dropHasLift: formData.dropHasLift,
+        needsStorage: formData.needsStorage,
+        storageStartDate: formData.storageStartDate,
+        storageEndDate: formData.storageEndDate,
+        includesInsurance: formData.includesInsurance,
       };
 
       const response = await orderAPI.createOrder(payload as any);
@@ -344,9 +396,9 @@ export default function BookingPage() {
           <div className="grid grid-cols-3 rounded-full bg-[#EFF2FF] p-1 text-sm font-medium">
             {(
               [
-                { key: 'PICK_NOW', label: 'Pick Now' },
-                { key: 'SCHEDULED', label: 'Schedule' },
                 { key: 'URGENT', label: 'Urgent' },
+                { key: 'SAME_DAY_DELIVERY', label: 'Same Day' },
+                { key: 'SCHEDULED', label: 'Scheduled' },
               ] as { key: BookingType; label: string }[]
             ).map((option) => {
               const active = bookingType === option.key;
@@ -511,6 +563,155 @@ export default function BookingPage() {
                 placeholder="Pin Code"
               />
             </div>
+
+            {/* Helper & Stair Details Section */}
+            <div className="mt-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-900">Delivery Assistance</h3>
+
+              {/* Number of Helpers */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Number of Helpers</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={formData.numberOfHelpers}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, numberOfHelpers: parseInt(e.target.value) || 0 }))
+                  }
+                  className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
+                  placeholder="0"
+                />
+              </div>
+
+              {/* Pickup Stairs */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Pickup Floors</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={formData.pickupFloors}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, pickupFloors: parseInt(e.target.value) || 0 }))
+                    }
+                    className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center space-x-2 cursor-pointer w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.pickupHasLift}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, pickupHasLift: e.target.checked }))
+                      }
+                      className="w-4 h-4 text-[#0F58FF] border-gray-300 rounded focus:ring-[#0F58FF]"
+                    />
+                    <span className="text-xs font-medium text-gray-700">Lift Available</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Drop Stairs */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Drop Floors</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={formData.dropFloors}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, dropFloors: parseInt(e.target.value) || 0 }))
+                    }
+                    className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center space-x-2 cursor-pointer w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.dropHasLift}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, dropHasLift: e.target.checked }))
+                      }
+                      className="w-4 h-4 text-[#0F58FF] border-gray-300 rounded focus:ring-[#0F58FF]"
+                    />
+                    <span className="text-xs font-medium text-gray-700">Lift Available</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Storage Section */}
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Short-term Storage</h3>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.needsStorage}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, needsStorage: e.target.checked }))
+                    }
+                    className="w-4 h-4 text-[#0F58FF] border-gray-300 rounded focus:ring-[#0F58FF]"
+                  />
+                  <span className="text-xs font-medium text-gray-700">Need Storage</span>
+                </label>
+              </div>
+
+              {formData.needsStorage && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      value={formData.storageStartDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, storageStartDate: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={formData.storageEndDate}
+                      min={formData.storageStartDate || new Date().toISOString().split('T')[0]}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, storageEndDate: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Insurance Toggle */}
+            <div className="mt-4">
+              <label className="flex items-center justify-between cursor-pointer rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2.5">
+                <div>
+                  <span className="text-sm font-semibold text-gray-900">Insurance (£30)</span>
+                  <p className="text-xs text-gray-500">Protect your shipment</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.includesInsurance}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, includesInsurance: e.target.checked }))
+                  }
+                  className="w-5 h-5 text-[#0F58FF] border-gray-300 rounded focus:ring-[#0F58FF]"
+                />
+              </label>
+            </div>
+
             <button
               onClick={() => {
                 if (!formData.receiverName || !formData.receiverAddressLine1) {
@@ -519,7 +720,7 @@ export default function BookingPage() {
                 }
                 setCurrentStep('parcelSelection');
               }}
-              className="mt-3 w-full rounded-full bg-[#0F58FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
+              className="mt-4 w-full rounded-full bg-[#0F58FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
             >
               Continue
             </button>
@@ -1165,11 +1366,13 @@ function PriceBreakdownModal({
 }) {
   if (!open) return null;
 
+  const breakdown = price?.breakdown || {};
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-[380px] rounded-3xl bg-white px-6 py-6 shadow-2xl">
+      <div className="w-full max-w-[380px] rounded-3xl bg-white px-6 py-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900">Price Breakup</h3>
+          <h3 className="text-lg font-bold text-gray-900">Price Breakdown</h3>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
@@ -1178,20 +1381,88 @@ function PriceBreakdownModal({
           </button>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <span className="text-sm font-medium text-gray-700">Package Charges (M)</span>
-            <span className="text-sm font-bold text-gray-900">£{price?.baseFare || 200}</span>
+        <div className="space-y-2">
+          {/* Distance Info */}
+          <div className="bg-blue-50 rounded-lg p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-blue-700">Distance</span>
+              <span className="text-sm font-bold text-blue-900">
+                {price?.distance?.toFixed(1) || 0} miles
+              </span>
+            </div>
+            {price?.isUlezZone && (
+              <div className="mt-1 text-xs text-blue-600">
+                📍 ULEZ Zone detected
+              </div>
+            )}
           </div>
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <span className="text-sm font-medium text-gray-700">Driver Charges</span>
-            <span className="text-sm font-bold text-gray-900">£{price?.distanceFare || 2}</span>
-          </div>
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <span className="text-sm font-medium text-gray-700">VAT</span>
-            <span className="text-sm font-bold text-gray-900">£{Math.round((price?.total || 0) * 0.2)}</span>
+
+          {/* Mileage Charge */}
+          {breakdown.mileageCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">Mileage Charge</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.mileageCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Load Volume Charge */}
+          {breakdown.loadVolumeCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">Load Volume Surcharge</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.loadVolumeCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* ULEZ Charge */}
+          {breakdown.ulezCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">ULEZ Surcharge</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.ulezCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Helper Charge */}
+          {breakdown.helperCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">Helper Charge</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.helperCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Stair Carry Charge */}
+          {breakdown.stairCarryCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">Stair Carry Charge</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.stairCarryCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Storage Charge */}
+          {breakdown.storageCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">Storage Charge</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.storageCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Insurance Charge */}
+          {breakdown.insuranceCharge > 0 && (
+            <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-700">Insurance</span>
+              <span className="text-sm font-bold text-gray-900">£{breakdown.insuranceCharge?.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Total */}
+          <div className="flex items-center justify-between py-4 mt-3 bg-[#EEF3FF] rounded-lg px-3">
+            <span className="text-base font-bold text-gray-900">Total Amount</span>
+            <span className="text-xl font-bold text-[#0F58FF]">£{breakdown.total || price?.total || 0}</span>
           </div>
         </div>
+
+        <p className="text-xs text-gray-500 text-center mt-4">
+          All prices include applicable taxes
+        </p>
       </div>
     </div>
   );

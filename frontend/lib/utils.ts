@@ -30,12 +30,12 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * Format currency (INR)
+ * Format currency (GBP)
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'INR',
+    currency: 'GBP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);

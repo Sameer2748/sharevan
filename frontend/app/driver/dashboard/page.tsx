@@ -67,9 +67,30 @@ export default function DriverDashboard() {
       return
     }
 
-    fetchData()
+    // Only fetch active order - available orders will come via WebSocket
+    fetchActiveOrder().finally(() => setLoading(false))
     getCurrentLocation() // Fetch location only once on mount
   }, [hasHydrated, isAuthenticated, user?.role, user?.onboardingCompleted])
+
+  // Auto go online and setup heartbeat
+  useEffect(() => {
+    if (!hasHydrated || !isAuthenticated || user?.role !== 'DRIVER') return
+
+    // Auto set driver online when they visit dashboard
+    setDriverOnline()
+
+    // Send heartbeat every 1 minute to keep driver online
+    const heartbeatInterval = setInterval(() => {
+      sendHeartbeat()
+    }, 60000) // 60 seconds
+
+    // Cleanup: go offline when component unmounts
+    return () => {
+      clearInterval(heartbeatInterval)
+      // Optionally set driver offline when leaving dashboard
+      driverAPI.toggleOnlineStatus(false).catch(console.error)
+    }
+  }, [hasHydrated, isAuthenticated, user?.role])
 
   // Separate effect for WebSocket listeners
   useEffect(() => {
@@ -165,14 +186,6 @@ export default function DriverDashboard() {
     }
   }, [hasHydrated, isAuthenticated, token])
 
-  const fetchData = async () => {
-    try {
-      await Promise.all([fetchActiveOrder(), fetchAvailableOrders()])
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const fetchActiveOrder = async () => {
     try {
       const response = await driverAPI.getActiveOrder()
@@ -182,37 +195,17 @@ export default function DriverDashboard() {
     }
   }
 
-  const fetchAvailableOrders = async () => {
-    try {
-      const response = await driverAPI.getAvailableOrders()
-      const orders = response.data.data.orders || []
-
-      // Filter out rejected orders
-      const filteredOrders = orders.filter((order: any) => !rejectedOrderIds.has(order.id))
-      setAvailableOrders(filteredOrders)
-
-      // Show drawer for the first available order if not currently showing
-      if (filteredOrders.length > 0 && !showNewRideDrawer && !activeOrder) {
-        const newOrder = filteredOrders[0]
-        setShowNewRideDrawer(true)
-        setSelectedRide(newOrder)
-      } else if (filteredOrders.length === 0 && showNewRideDrawer) {
-        // Close drawer if no orders available
-        setShowNewRideDrawer(false)
-        setSelectedRide(null)
-      }
-    } catch (error) {
-      console.error('Failed to fetch orders')
-    }
-  }
-
   const handleAcceptRide = async (orderId: string) => {
     try {
       await driverAPI.acceptOrder(orderId)
       toast.success('Ride accepted!')
       setShowNewRideDrawer(false)
+
+      // Remove from available orders
+      setAvailableOrders(prev => prev.filter(o => o.id !== orderId))
+
+      // Fetch active order to update UI
       await fetchActiveOrder()
-      await fetchAvailableOrders()
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to accept ride')
     }
@@ -232,33 +225,50 @@ export default function DriverDashboard() {
         localStorage.setItem('rejectedOrders', JSON.stringify([...newRejectedIds]))
       }
 
-      // Close drawer
-      setShowNewRideDrawer(false)
-      setSelectedRide(null)
+      // Remove from available orders
+      setAvailableOrders(prev => prev.filter(o => o.id !== orderId))
 
-      // Fetch next available order
-      await fetchAvailableOrders()
+      // Close drawer and show next available order if any
+      const remainingOrders = availableOrders.filter(o => o.id !== orderId && !newRejectedIds.has(o.id))
+      if (remainingOrders.length > 0) {
+        setSelectedRide(remainingOrders[0])
+        setShowNewRideDrawer(true)
+      } else {
+        setShowNewRideDrawer(false)
+        setSelectedRide(null)
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to reject order')
     }
   }
 
-  const toggleOnlineStatus = async () => {
+  // Auto go online when driver visits dashboard
+  const setDriverOnline = async () => {
     try {
-      const newStatus = !isOnline
-      await driverAPI.toggleOnlineStatus(newStatus)
+      await driverAPI.toggleOnlineStatus(true)
 
-      // Emit WebSocket event to join/leave online-drivers room
+      // Emit WebSocket event to join online-drivers room
       const socket = getSocket()
       if (socket?.connected) {
-        socket.emit('driver:status-change', { isOnline: newStatus })
-        console.log(`📡 Emitted driver:status-change - isOnline: ${newStatus}`)
+        socket.emit('driver:status-change', { isOnline: true })
+        console.log(`📡 Driver auto-online - joined online-drivers room`)
       }
 
-      setIsOnline(newStatus)
-      toast.success(newStatus ? 'You are now online' : 'You are now offline')
+      setIsOnline(true)
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update status')
+      console.error('Failed to set driver online:', error)
+    }
+  }
+
+  // Send heartbeat to keep driver online
+  const sendHeartbeat = async () => {
+    try {
+      const socket = getSocket()
+      if (socket?.connected) {
+        socket.emit('driver:heartbeat')
+      }
+    } catch (error) {
+      console.error('Failed to send heartbeat:', error)
     }
   }
 
@@ -398,16 +408,12 @@ export default function DriverDashboard() {
                 Earn Upto <span className="text-[18px] sm:text-[20px] md:text-[22px] font-bold text-yellow-300 inline-block leading-[1]">£245</span>{' '}
                 <span className="block">with Share Van</span>
               </h1>
-              <button
-                onClick={toggleOnlineStatus}
-                className={`inline-flex items-center justify-center rounded-full px-4 sm:px-5 py-2 mt-2 text-sm sm:text-base font-semibold shadow-md transition ${
-                  isOnline
-                    ? 'bg-green-500 text-white hover:bg-green-600'
-                    : 'bg-white text-[#0F58FF] hover:bg-white/90'
-                }`}
-              >
-                {isOnline ? 'Online' : 'Go Online'}
-              </button>
+              {isOnline && (
+                <div className="inline-flex items-center justify-center rounded-full px-4 sm:px-5 py-2 mt-2 text-sm sm:text-base font-semibold shadow-md bg-green-500 text-white">
+                  <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+                  Online
+                </div>
+              )}
             </div>
           </div>
         </div>

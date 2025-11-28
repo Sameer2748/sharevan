@@ -15,6 +15,7 @@ import orderRoutes from './routes/orderRoutes';
 import driverRoutes from './routes/driverRoutes';
 import userRoutes from './routes/userRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import chatRoutes from './routes/chatRoutes';
 
 // Create Express app
 const app: Express = express();
@@ -178,6 +179,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/driver', driverRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/chat', chatRoutes);
 
 // ============================================================================
 // ERROR HANDLERS

@@ -5,14 +5,17 @@ import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { driverAPI, orderAPI } from '@/lib/api'
 import { toast } from 'sonner'
-import { ArrowLeft, MapPin, Upload, X, Phone, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, MapPin, Upload, X, Phone, Check, Loader2, MessageCircle, Clock } from 'lucide-react'
 import Image from 'next/image'
+import ChatModal from '@/components/shared/ChatModal'
+import { initSocket, socket } from '@/lib/socket'
 
 export default function ActiveRideDetailsPage() {
   const router = useRouter()
   const params = useParams()
-  const { user, isAuthenticated, hasHydrated } = useAuthStore()
+  const { user, isAuthenticated, hasHydrated, token } = useAuthStore()
   const [order, setOrder] = useState<any>(null)
+  const [showChatModal, setShowChatModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [parcelImage, setParcelImage] = useState<File | null>(null)
   const [parcelImagePreview, setParcelImagePreview] = useState<string | null>(null)
@@ -22,6 +25,7 @@ export default function ActiveRideDetailsPage() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [eta, setEta] = useState<any>(null)
 
   useEffect(() => {
     if (!hasHydrated) return
@@ -31,8 +35,25 @@ export default function ActiveRideDetailsPage() {
       return
     }
 
+    if (token) {
+      initSocket(token)
+    }
+
     fetchOrderDetails()
-  }, [hasHydrated, isAuthenticated, user, params.id, router])
+
+    // Listen for ETA updates
+    const handleEtaUpdate = (data: any) => {
+      if (data.orderId === params.id && data.eta) {
+        setEta(data.eta)
+      }
+    }
+
+    socket?.on('eta:updated', handleEtaUpdate)
+
+    return () => {
+      socket?.off('eta:updated', handleEtaUpdate)
+    }
+  }, [hasHydrated, isAuthenticated, user, params.id, router, token])
 
   const fetchOrderDetails = async () => {
     try {
@@ -275,12 +296,57 @@ export default function ActiveRideDetailsPage() {
       </div>
 
       <div className="p-6 max-w-md mx-auto">
-        {/* URGENT Badge */}
-        <div className="mb-4">
-          <span className="px-4 py-1 bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-full">
-            URGENT
-          </span>
-        </div>
+        {/* URGENT Badge - Only show for URGENT orders */}
+        {order.bookingType === 'URGENT' && (
+          <div className="mb-4">
+            <span className="px-4 py-1 bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-full">
+              URGENT
+            </span>
+          </div>
+        )}
+
+        {/* ETA Display - Only show pickup time before PICKED_UP, then show delivery time */}
+        {eta && (
+          <>
+            {/* Show pickup ETA only before pickup is complete */}
+            {!['PICKED_UP', 'IN_TRANSIT', 'REACHED_DESTINATION', 'DELIVERED'].includes(order.status) && eta.type === 'pickup' && (
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 mb-4 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-sm opacity-90 mb-1">
+                      <Clock className="w-4 h-4" />
+                      ETA to Pickup
+                    </div>
+                    <div className="text-3xl font-bold">{eta.minutes} min</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      Expected at {new Date(eta.estimatedArrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="text-5xl">📍</div>
+                </div>
+              </div>
+            )}
+
+            {/* Show delivery ETA only after pickup is complete */}
+            {['PICKED_UP', 'IN_TRANSIT', 'REACHED_DESTINATION'].includes(order.status) && eta.type === 'delivery' && (
+              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-4 mb-4 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-sm opacity-90 mb-1">
+                      <Clock className="w-4 h-4" />
+                      ETA to Delivery
+                    </div>
+                    <div className="text-3xl font-bold">{eta.minutes} min</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      Expected at {new Date(eta.estimatedArrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="text-5xl">🎯</div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Addresses */}
         <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
@@ -338,14 +404,26 @@ export default function ActiveRideDetailsPage() {
               <p className="text-sm text-gray-500">Number of Package</p>
               <p className="text-lg font-bold text-gray-900">1</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Drop of Time</p>
-              <p className="text-lg font-bold text-red-600">
-                {order.bookingType === 'URGENT'
-                  ? `Today, ${new Date(order.urgentDeliveryTime || order.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false })}`
-                  : 'Standard'}
-              </p>
-            </div>
+            {['PICKED_UP', 'IN_TRANSIT', 'REACHED_DESTINATION', 'DELIVERED'].includes(order.status) && (
+              <div>
+                <p className="text-sm text-gray-500">Drop of Time</p>
+                <p className="text-lg font-bold text-red-600">
+                  {(() => {
+                    // If we have live ETA from driver's current location, use that
+                    if (eta && eta.type === 'delivery' && eta.estimatedArrivalTime) {
+                      return `Today, ${new Date(eta.estimatedArrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                    }
+                    // Otherwise, calculate based on pickup time + route duration
+                    if (order.pickedUpAt && order.estimatedDuration) {
+                      const pickupTime = new Date(order.pickedUpAt);
+                      const estimatedDeliveryTime = new Date(pickupTime.getTime() + (order.estimatedDuration * 60 * 1000) + (3 * 60 * 1000)); // Add 3 min buffer
+                      return `Today, ${estimatedDeliveryTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                    }
+                    return 'Calculating...';
+                  })()}
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -471,13 +549,22 @@ export default function ActiveRideDetailsPage() {
 
           {(order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT') && (
             <>
-              <button
-                onClick={() => window.location.href = `tel:${order.user.mobile}`}
-                className="w-full bg-[#103EF7] text-white py-4 rounded-full font-semibold text-lg hover:bg-[#0D35D1] transition flex items-center justify-center gap-2"
-              >
-                <Phone className="w-5 h-5" />
-                Call User
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => window.location.href = `tel:${order.user.mobile}`}
+                  className="bg-[#103EF7] text-white py-4 rounded-full font-semibold hover:bg-[#0D35D1] transition flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-5 h-5" />
+                  Call
+                </button>
+                <button
+                  onClick={() => setShowChatModal(true)}
+                  className="bg-green-500 text-white py-4 rounded-full font-semibold hover:bg-green-600 transition flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Chat
+                </button>
+              </div>
               <button
                 onClick={handleConfirmDrop}
                 className="w-full bg-white border-2 border-[#103EF7] text-[#103EF7] py-4 rounded-full font-semibold hover:bg-blue-50 transition"
@@ -559,6 +646,17 @@ export default function ActiveRideDetailsPage() {
             </button>
           </div>
         </>
+      )}
+
+      {/* Chat Modal */}
+      {order && order.user && (
+        <ChatModal
+          orderId={order.id}
+          orderNumber={order.orderNumber}
+          currentUserRole="DRIVER"
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+        />
       )}
     </div>
   )

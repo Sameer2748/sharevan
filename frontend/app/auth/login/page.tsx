@@ -74,6 +74,16 @@ export default function LoginPage() {
         return
       }
 
+      // Check if user came from booking flow
+      const fromBooking = searchParams.get('fromBooking')
+      const returnUrl = searchParams.get('returnUrl')
+
+      if (fromBooking === 'true' && returnUrl) {
+        // User came from public booking page, redirect back to complete booking
+        router.push(returnUrl)
+        return
+      }
+
       // Redirect to dashboard based on role
       if (role === 'USER') {
         router.push('/user/dashboard')

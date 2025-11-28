@@ -33,8 +33,9 @@ enum OrderStatus {
 }
 
 enum BookingType {
-  URGENT      // Immediate delivery
-  SCHEDULED   // Scheduled for later
+  URGENT             // Immediate delivery (£2.0 per mile)
+  SAME_DAY_DELIVERY  // Same day delivery (£1.7 per mile)
+  SCHEDULED          // Scheduled for later (£1.6 per mile)
 }
 
 enum PackageSize {
@@ -190,14 +191,45 @@ model Order {
   scheduledDate         DateTime?
   scheduledTimeSlot     String?      // e.g., "09:00-10:00"
 
+  // Helper & Stair Carry Details
+  numberOfHelpers       Int          @default(0)
+  pickupFloors          Int          @default(0)    // Number of floors at pickup
+  pickupHasLift         Boolean      @default(true)
+  dropFloors            Int          @default(0)    // Number of floors at drop
+  dropHasLift           Boolean      @default(true)
+
+  // Receiver Address Details
+  receiverAddressLine1  String?
+  receiverAddressLine2  String?
+  receiverPostalCode    String?
+
+  // Storage Details
+  needsStorage          Boolean      @default(false)
+  storageStartDate      DateTime?
+  storageEndDate        DateTime?
+  storageDays           Int?
+
+  // Insurance
+  includesInsurance     Boolean      @default(true)
+
   // Order Status & Tracking
   status                OrderStatus  @default(PENDING)
 
-  // Distance & Pricing
-  distance              Float?       // in kilometers
+  // Distance & Pricing (in miles, not km)
+  distance              Float?       // in miles
   estimatedDuration     Int?         // in minutes
   estimatedPrice        Float
   finalPrice            Float?
+
+  // Price Breakdown
+  mileageCharge         Float?
+  loadVolumeCharge      Float?
+  ulezCharge            Float?       @default(0)
+  stairCarryCharge      Float?       @default(0)
+  helperCharge          Float?       @default(0)
+  storageCharge         Float?       @default(0)
+  insuranceCharge       Float?       @default(30)
+  isUlezZone            Boolean      @default(false)
 
   // OTP for Security
   pickupOtp             String?
@@ -237,6 +269,7 @@ model Order {
 
   statusHistory         OrderStatusHistory[]
   review                Review?
+  chatMessages          ChatMessage[]
 
   @@index([status, driverId])
   @@index([userId])
@@ -305,6 +338,26 @@ model Review {
   @@index([driverId])
   @@index([rating])
   @@map("reviews")
+}
+
+// ============================================================================
+// CHAT MESSAGES
+// ============================================================================
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  orderId     String
+  senderId    String
+  senderRole  String   // "USER" or "DRIVER"
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("chat_messages")
 }
 
 // ============================================================================

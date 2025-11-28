@@ -3,6 +3,7 @@ import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { prisma } from '../config/database';
+import { calculateRoute } from '../services/mapService';
 
 /**
  * Initialize Socket.io for real-time updates
@@ -76,6 +77,9 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
         if (data.isOnline) {
           socket.join('online-drivers');
           console.log(`🟢 Driver ${userId} is now ONLINE`);
+
+          // Send all current available orders to this driver
+          await sendAvailableOrdersToDriver(socket, userId);
         } else {
           socket.leave('online-drivers');
           console.log(`🔴 Driver ${userId} is now OFFLINE`);
@@ -105,18 +109,78 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
           }
         });
 
-        // If orderId provided, broadcast to user tracking this order
+        // If orderId provided, calculate ETA and broadcast to user
         if (orderId) {
           const order = await prisma.order.findUnique({
             where: { id: orderId },
-            select: { userId: true, driverId: true }
+            select: {
+              userId: true,
+              driverId: true,
+              status: true,
+              pickupLat: true,
+              pickupLng: true,
+              deliveryLat: true,
+              deliveryLng: true,
+              estimatedDuration: true
+            }
           });
 
           if (order && order.driverId === userId) {
+            let etaMinutes = 0;
+            let etaType: 'pickup' | 'delivery' = 'pickup';
+
+            // Calculate ETA based on order status
+            if (order.status === 'DRIVER_ASSIGNED' || order.status === 'DRIVER_ARRIVED') {
+              // Driver going to pickup - calculate time from current location to pickup
+              try {
+                const route = await calculateRoute(
+                  { lat, lng },
+                  { lat: order.pickupLat, lng: order.pickupLng }
+                );
+                etaMinutes = Math.ceil(route.duration + 2); // Add 2 min buffer
+                etaType = 'pickup';
+              } catch (err) {
+                console.error('Error calculating pickup ETA:', err);
+                etaMinutes = order.estimatedDuration || 30;
+              }
+            } else if (order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT' || order.status === 'REACHED_DESTINATION') {
+              // Driver going to delivery - calculate time from current location to delivery
+              try {
+                const route = await calculateRoute(
+                  { lat, lng },
+                  { lat: order.deliveryLat, lng: order.deliveryLng }
+                );
+                etaMinutes = Math.ceil(route.duration + 3); // Add 3 min buffer
+                etaType = 'delivery';
+              } catch (err) {
+                console.error('Error calculating delivery ETA:', err);
+                etaMinutes = order.estimatedDuration || 30;
+              }
+            }
+
+            // Calculate estimated arrival time (current time + ETA)
+            const estimatedArrivalTime = new Date(Date.now() + etaMinutes * 60 * 1000);
+
+            // Broadcast to user with location and ETA
             io.to(`user-${order.userId}`).emit('driver:location', {
               orderId,
               location: { lat, lng },
+              eta: {
+                minutes: etaMinutes,
+                type: etaType,
+                estimatedArrivalTime: estimatedArrivalTime.toISOString()
+              },
               timestamp: new Date()
+            });
+
+            // Also send ETA to driver
+            socket.emit('eta:updated', {
+              orderId,
+              eta: {
+                minutes: etaMinutes,
+                type: etaType,
+                estimatedArrivalTime: estimatedArrivalTime.toISOString()
+              }
             });
           }
         }
@@ -175,7 +239,87 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
       console.log(`📍 ${userRole} ${userId} stopped tracking order: ${data.orderId}`);
     });
 
-    // Typing indicators (for potential chat feature)
+    // Chat message
+    socket.on('chat:message', async (data: { orderId: string; message: string }) => {
+      try {
+        const { orderId, message } = data;
+
+        // Verify order exists and user has access
+        const order = await prisma.order.findUnique({
+          where: { id: orderId },
+          select: { userId: true, driverId: true }
+        });
+
+        if (!order) {
+          socket.emit('error', { message: 'Order not found' });
+          return;
+        }
+
+        // Verify user is part of this order
+        if (userRole === 'USER' && order.userId !== userId) {
+          socket.emit('error', { message: 'Access denied' });
+          return;
+        }
+
+        if (userRole === 'DRIVER' && order.driverId !== userId) {
+          socket.emit('error', { message: 'Access denied' });
+          return;
+        }
+
+        // Save message to database
+        const chatMessage = await prisma.chatMessage.create({
+          data: {
+            orderId,
+            senderId: userId,
+            senderRole: userRole,
+            message
+          }
+        });
+
+        // Broadcast to order room (both user and driver)
+        io.to(`order-${orderId}`).emit('chat:message', {
+          id: chatMessage.id,
+          orderId,
+          senderId: userId,
+          senderRole: userRole,
+          message,
+          createdAt: chatMessage.createdAt,
+          isRead: false
+        });
+
+        console.log(`💬 ${userRole} ${userId} sent message in order ${orderId}`);
+      } catch (error) {
+        console.error('Error sending chat message:', error);
+        socket.emit('error', { message: 'Failed to send message' });
+      }
+    });
+
+    // Mark messages as read
+    socket.on('chat:mark-read', async (data: { orderId: string }) => {
+      try {
+        const { orderId } = data;
+
+        // Update all unread messages for this order where user is NOT the sender
+        await prisma.chatMessage.updateMany({
+          where: {
+            orderId,
+            senderId: { not: userId },
+            isRead: false
+          },
+          data: { isRead: true }
+        });
+
+        // Notify the other party
+        socket.to(`order-${orderId}`).emit('chat:messages-read', {
+          orderId,
+          readBy: userRole
+        });
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    });
+
+    // Typing indicators
     socket.on('typing:start', (data: { orderId: string }) => {
       socket.to(`order-${data.orderId}`).emit('typing:user', {
         userId,
@@ -250,9 +394,48 @@ const checkDriverOnlineStatus = async (driverId: string, socket: Socket) => {
     if (driver?.isOnline) {
       socket.join('online-drivers');
       console.log(`🟢 Driver ${driverId} joined online-drivers room`);
+
+      // Send available orders to driver on reconnect if already online
+      await sendAvailableOrdersToDriver(socket, driverId);
     }
   } catch (error) {
     console.error('Error checking driver status:', error);
+  }
+};
+
+/**
+ * Send all current available orders to a specific driver
+ */
+const sendAvailableOrdersToDriver = async (socket: Socket, driverId: string) => {
+  try {
+    // Fetch all pending orders (waiting for driver assignment)
+    const availableOrders = await prisma.order.findMany({
+      where: {
+        status: { in: ['PENDING', 'SEARCHING_DRIVER'] },
+        driverId: null
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    // Send each order as a new-order-alert to maintain consistency with real-time flow
+    for (const order of availableOrders) {
+      socket.emit('new-order-alert', { order });
+    }
+
+    console.log(`📦 Sent ${availableOrders.length} available orders to driver ${driverId}`);
+  } catch (error) {
+    console.error('Error sending available orders to driver:', error);
   }
 };
 

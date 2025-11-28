@@ -9,8 +9,9 @@ import Navbar from '@/components/shared/Navbar';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { onOrderStatusUpdate, trackOrder, untrackOrder, onDriverLocation, initSocket } from '@/lib/socket';
-import { MapPin, Package, User, Phone, Clock, DollarSign, TruckIcon, Star, X, Loader2, Camera } from 'lucide-react';
+import { MapPin, Package, User, Phone, Clock, DollarSign, TruckIcon, Star, X, Loader2, Camera, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
+import ChatModal from '@/components/shared/ChatModal';
 
 export default function OrderDetailPage() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [driverLocation, setDriverLocation] = useState<any>(null);
+  const [eta, setEta] = useState<any>(null);
+  const [showChatModal, setShowChatModal] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<any>(null);
   const driverMarkerRef = useRef<any>(null);
@@ -51,9 +54,14 @@ export default function OrderDetailPage() {
     };
 
     const locationHandler = (data: any) => {
-      if (data.orderId === orderId && data.lat && data.lng) {
-        setDriverLocation(data.location);
-        updateDriverMarker(data.lat, data.lng);
+      if (data.orderId === orderId) {
+        if (data.location) {
+          setDriverLocation(data.location);
+          updateDriverMarker(data.location.lat, data.location.lng);
+        }
+        if (data.eta) {
+          setEta(data.eta);
+        }
       }
     };
 
@@ -290,6 +298,47 @@ export default function OrderDetailPage() {
       )}
 
       <div className="px-4 py-6 space-y-4">
+        {/* ETA Display - Only show pickup time before PICKED_UP, then show delivery time */}
+        {eta && order.driver && (
+          <>
+            {/* Show pickup ETA only before pickup is complete */}
+            {!['PICKED_UP', 'IN_TRANSIT', 'REACHED_DESTINATION', 'DELIVERED'].includes(order.status) && eta.type === 'pickup' && (
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm opacity-90 mb-1">
+                      🚗 Driver arriving in
+                    </div>
+                    <div className="text-3xl font-bold">{eta.minutes} min</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      Expected at {new Date(eta.estimatedArrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="text-5xl">🏁</div>
+                </div>
+              </div>
+            )}
+
+            {/* Show delivery ETA only after pickup is complete */}
+            {['PICKED_UP', 'IN_TRANSIT', 'REACHED_DESTINATION'].includes(order.status) && eta.type === 'delivery' && (
+              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm opacity-90 mb-1">
+                      📦 Delivery in
+                    </div>
+                    <div className="text-3xl font-bold">{eta.minutes} min</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      Expected at {new Date(eta.estimatedArrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="text-5xl">🎯</div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
         {/* Order Info Card */}
         <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
           {/* Distance */}
@@ -308,20 +357,32 @@ export default function OrderDetailPage() {
             </p>
           </div>
 
-          {/* Number of Packages & Drop Time */}
+          {/* Number of Packages & Drop Time - Only show drop time after pickup */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Number of Package</p>
               <p className="text-lg font-bold text-gray-900">1</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Drop of Time</p>
-              <p className="text-lg font-bold text-red-600">
-                {order.bookingType === 'URGENT'
-                  ? `Today, ${new Date(order.urgentDeliveryTime || order.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false })}`
-                  : 'Standard'}
-              </p>
-            </div>
+            {['PICKED_UP', 'IN_TRANSIT', 'REACHED_DESTINATION', 'DELIVERED'].includes(order.status) && (
+              <div>
+                <p className="text-sm text-gray-500">Drop of Time</p>
+                <p className="text-lg font-bold text-red-600">
+                  {(() => {
+                    // If we have live ETA from driver's current location, use that
+                    if (eta && eta.type === 'delivery' && eta.estimatedArrivalTime) {
+                      return `Today, ${new Date(eta.estimatedArrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                    }
+                    // Otherwise, calculate based on pickup time + route duration
+                    if (order.pickedUpAt && order.estimatedDuration) {
+                      const pickupTime = new Date(order.pickedUpAt);
+                      const estimatedDeliveryTime = new Date(pickupTime.getTime() + (order.estimatedDuration * 60 * 1000) + (3 * 60 * 1000)); // Add 3 min buffer
+                      return `Today, ${estimatedDeliveryTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                    }
+                    return 'Calculating...';
+                  })()}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Fare */}
@@ -396,12 +457,21 @@ export default function OrderDetailPage() {
                   {order.driver.rating.toFixed(1)}
                 </div>
               </div>
-              <a
-                href={`tel:${order.driver.mobile}`}
-                className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium"
-              >
-                Call
-              </a>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowChatModal(true)}
+                  className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition"
+                  title="Chat with driver"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </button>
+                <a
+                  href={`tel:${order.driver.mobile}`}
+                  className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  Call
+                </a>
+              </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs font-semibold text-gray-600">
               <div className="rounded-xl border border-[#EEF1FF] bg-[#F8F9FF] px-4 py-3">
@@ -503,19 +573,6 @@ export default function OrderDetailPage() {
           </div>
         )}
 
-        {/* Price Details */}
-        <div className="bg-gradient-to-br from-primary to-blue-600 rounded-xl p-4 text-white shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm opacity-90">Total Amount</div>
-              <div className="text-2xl font-bold mt-1">
-                {formatCurrency(order.finalPrice || order.estimatedPrice)}
-              </div>
-            </div>
-            <DollarSign className="w-8 h-8 opacity-50" />
-          </div>
-        </div>
-
         {/* Cancel Button */}
         {canCancel && (
           <button
@@ -537,6 +594,17 @@ export default function OrderDetailPage() {
           </button>
         )}
       </div>
+
+      {/* Chat Modal */}
+      {order && order.driver && (
+        <ChatModal
+          orderId={orderId}
+          orderNumber={order.orderNumber}
+          currentUserRole="USER"
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+        />
+      )}
     </div>
   );
 }

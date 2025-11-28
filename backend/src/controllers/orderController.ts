@@ -5,6 +5,7 @@ import { calculateRoute } from '../services/mapService';
 import { calculatePrice, calculateDriverEarnings } from '../services/pricingService';
 import { generateOrderOTP } from '../services/otpService';
 import { sendSMS } from '../services/smsService';
+import { calculateDeliveryPrice, validateStorageDates } from '../utils/pricingCalculator';
 
 /**
  * Calculate price estimate
@@ -12,7 +13,25 @@ import { sendSMS } from '../services/smsService';
  */
 export const calculatePriceEstimate = async (req: Request, res: Response) => {
   try {
-    const { pickupLat, pickupLng, deliveryLat, deliveryLng, packageSize, bookingType } = req.body;
+    const {
+      pickupLat,
+      pickupLng,
+      deliveryLat,
+      deliveryLng,
+      packageSize,
+      bookingType,
+      dropPostcode,
+      dropAddress,
+      numberOfHelpers,
+      pickupFloors,
+      pickupHasLift,
+      dropFloors,
+      dropHasLift,
+      needsStorage,
+      storageStartDate,
+      storageEndDate,
+      includesInsurance
+    } = req.body;
 
     // Validate coordinates
     if (!pickupLat || !pickupLng || !deliveryLat || !deliveryLng) {
@@ -23,23 +42,69 @@ export const calculatePriceEstimate = async (req: Request, res: Response) => {
       return sendError(res, 'Valid package size required (SMALL, MEDIUM, LARGE)');
     }
 
-    if (!bookingType || !['URGENT', 'SCHEDULED'].includes(bookingType)) {
-      return sendError(res, 'Valid booking type required (URGENT, SCHEDULED)');
+    if (!bookingType || !['URGENT', 'SAME_DAY_DELIVERY', 'SCHEDULED'].includes(bookingType)) {
+      return sendError(res, 'Valid booking type required (URGENT, SAME_DAY_DELIVERY, SCHEDULED)');
     }
 
-    // Calculate distance
+    // Calculate distance using map service (returns distance in km)
     const route = await calculateRoute(
       { lat: parseFloat(pickupLat), lng: parseFloat(pickupLng) },
       { lat: parseFloat(deliveryLat), lng: parseFloat(deliveryLng) }
     );
 
-    // Calculate price
-    const pricing = await calculatePrice(route.distance, packageSize, bookingType);
+    // Convert km to miles (1 km = 0.621371 miles)
+    const distanceInMiles = route.distance * 0.621371;
+
+    // Validate storage dates if storage is needed
+    let storageDays = 0;
+    if (needsStorage && storageStartDate && storageEndDate) {
+      const validation = validateStorageDates(new Date(storageStartDate), new Date(storageEndDate));
+      if (!validation.valid) {
+        return sendError(res, validation.error || 'Invalid storage dates');
+      }
+      storageDays = validation.days;
+    }
+
+    // Calculate price using new pricing calculator
+    const estimatePricingInput = {
+      deliveryType: bookingType,
+      distanceInMiles,
+      loadSize: packageSize,
+      dropPostcode: dropPostcode || '',
+      dropAddress: dropAddress || '',
+      numberOfHelpers: numberOfHelpers || 0,
+      pickupFloors: pickupFloors || 0,
+      pickupHasLift: pickupHasLift !== undefined ? pickupHasLift : true,
+      dropFloors: dropFloors || 0,
+      dropHasLift: dropHasLift !== undefined ? dropHasLift : true,
+      needsStorage: needsStorage || false,
+      storageDays,
+      includesInsurance: includesInsurance !== undefined ? includesInsurance : true,
+    };
+
+    console.log('💰 CALCULATE PRICE ESTIMATE - Input:', JSON.stringify(estimatePricingInput, null, 2));
+
+    const priceBreakdown = calculateDeliveryPrice(estimatePricingInput);
+
+    console.log('💰 CALCULATE PRICE ESTIMATE - Result:', priceBreakdown.total);
 
     return sendSuccess(res, {
-      distance: route.distance,
+      distance: distanceInMiles,
+      distanceInKm: route.distance,
       estimatedDuration: route.duration,
-      ...pricing
+      estimatedPrice: priceBreakdown.total,
+      breakdown: {
+        mileageCharge: priceBreakdown.mileageCharge,
+        loadVolumeCharge: priceBreakdown.loadVolumeCharge,
+        ulezCharge: priceBreakdown.ulezCharge,
+        stairCarryCharge: priceBreakdown.stairCarryCharge,
+        helperCharge: priceBreakdown.helperCharge,
+        storageCharge: priceBreakdown.storageCharge,
+        insuranceCharge: priceBreakdown.insuranceCharge,
+        subtotal: priceBreakdown.subtotal,
+        total: priceBreakdown.total,
+      },
+      isUlezZone: priceBreakdown.isUlezZone,
     });
 
   } catch (error: any) {
@@ -70,10 +135,22 @@ export const createOrder = async (req: Request, res: Response) => {
       packageImages,
       receiverName,
       receiverMobile,
+      receiverAddressLine1,
+      receiverAddressLine2,
+      receiverPostalCode,
       specialInstructions,
       bookingType,
       scheduledDate,
-      scheduledTimeSlot
+      scheduledTimeSlot,
+      numberOfHelpers,
+      pickupFloors,
+      pickupHasLift,
+      dropFloors,
+      dropHasLift,
+      needsStorage,
+      storageStartDate,
+      storageEndDate,
+      includesInsurance
     } = req.body;
 
     // Validate required fields
@@ -87,11 +164,51 @@ export const createOrder = async (req: Request, res: Response) => {
       { lat: parseFloat(deliveryLat), lng: parseFloat(deliveryLng) }
     );
 
-    const pricing = await calculatePrice(
-      route.distance,
-      packageSize,
-      bookingType
-    );
+    // Convert km to miles
+    const distanceInMiles = route.distance * 0.621371;
+
+    // Validate storage dates if needed
+    let storageDays = 0;
+    if (needsStorage && storageStartDate && storageEndDate) {
+      const validation = validateStorageDates(new Date(storageStartDate), new Date(storageEndDate));
+      if (!validation.valid) {
+        return sendError(res, validation.error);
+      }
+      storageDays = validation.days;
+    }
+
+    // Calculate price using new pricing calculator
+    const pricingInput = {
+      deliveryType: bookingType as 'URGENT' | 'SAME_DAY_DELIVERY' | 'SCHEDULED',
+      distanceInMiles,
+      loadSize: packageSize as 'SMALL' | 'MEDIUM' | 'LARGE',
+      dropPostcode: receiverPostalCode || '',
+      dropAddress: deliveryAddress,
+      numberOfHelpers: numberOfHelpers || 0,
+      pickupFloors: pickupFloors || 0,
+      pickupHasLift: pickupHasLift !== undefined ? pickupHasLift : true,
+      dropFloors: dropFloors || 0,
+      dropHasLift: dropHasLift !== undefined ? dropHasLift : true,
+      needsStorage: needsStorage || false,
+      storageDays,
+      includesInsurance: includesInsurance !== undefined ? includesInsurance : true
+    };
+
+    console.log('📊 CREATE ORDER - Pricing input:', JSON.stringify(pricingInput, null, 2));
+
+    const priceBreakdown = calculateDeliveryPrice(pricingInput);
+
+    console.log('📊 CREATE ORDER - Price breakdown result:', {
+      total: priceBreakdown.total,
+      subtotal: priceBreakdown.subtotal,
+      mileageCharge: priceBreakdown.mileageCharge,
+      loadVolumeCharge: priceBreakdown.loadVolumeCharge,
+      helperCharge: priceBreakdown.helperCharge,
+      stairCarryCharge: priceBreakdown.stairCarryCharge,
+      storageCharge: priceBreakdown.storageCharge,
+      ulezCharge: priceBreakdown.ulezCharge,
+      insuranceCharge: priceBreakdown.insuranceCharge
+    });
 
     // Generate OTPs for pickup and delivery
     const pickupOtp = generateOrderOTP();
@@ -113,14 +230,41 @@ export const createOrder = async (req: Request, res: Response) => {
         packageImages: packageImages || [],
         receiverName,
         receiverMobile,
+        receiverAddressLine1,
+        receiverAddressLine2,
+        receiverPostalCode,
         specialInstructions,
         bookingType,
         scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
         scheduledTimeSlot,
-        distance: route.distance,
+        // Helper & Stair Details
+        numberOfHelpers: numberOfHelpers || 0,
+        pickupFloors: pickupFloors || 0,
+        pickupHasLift: pickupHasLift !== undefined ? pickupHasLift : true,
+        dropFloors: dropFloors || 0,
+        dropHasLift: dropHasLift !== undefined ? dropHasLift : true,
+        // Storage Details
+        needsStorage: needsStorage || false,
+        storageStartDate: storageStartDate ? new Date(storageStartDate) : null,
+        storageEndDate: storageEndDate ? new Date(storageEndDate) : null,
+        storageDays,
+        // Insurance
+        includesInsurance: includesInsurance !== undefined ? includesInsurance : true,
+        // Distance & Pricing (in miles)
+        distance: distanceInMiles,
         estimatedDuration: route.duration,
-        estimatedPrice: pricing.total,
-        finalPrice: pricing.total,
+        estimatedPrice: priceBreakdown.total,
+        finalPrice: priceBreakdown.total,
+        // Price Breakdown
+        mileageCharge: priceBreakdown.mileageCharge,
+        loadVolumeCharge: priceBreakdown.loadVolumeCharge,
+        ulezCharge: priceBreakdown.ulezCharge,
+        stairCarryCharge: priceBreakdown.stairCarryCharge,
+        helperCharge: priceBreakdown.helperCharge,
+        storageCharge: priceBreakdown.storageCharge,
+        insuranceCharge: priceBreakdown.insuranceCharge,
+        isUlezZone: priceBreakdown.isUlezZone,
+        // OTP & Status
         pickupOtp,
         deliveryOtp,
         status: 'SEARCHING_DRIVER'
@@ -149,10 +293,20 @@ export const createOrder = async (req: Request, res: Response) => {
           orderNumber: order.orderNumber,
           pickupAddress: order.pickupAddress,
           deliveryAddress: order.deliveryAddress,
+          receiverName: order.receiverName,
+          receiverMobile: order.receiverMobile,
           distance: order.distance,
           estimatedPrice: order.estimatedPrice,
-          totalPrice: order.totalPrice,
           finalPrice: order.finalPrice,
+          // Price breakdown
+          mileageCharge: order.mileageCharge,
+          loadVolumeCharge: order.loadVolumeCharge,
+          ulezCharge: order.ulezCharge,
+          stairCarryCharge: order.stairCarryCharge,
+          helperCharge: order.helperCharge,
+          storageCharge: order.storageCharge,
+          insuranceCharge: order.insuranceCharge,
+          isUlezZone: order.isUlezZone,
           packageSize: order.packageSize,
           bookingType: order.bookingType,
           status: order.status,

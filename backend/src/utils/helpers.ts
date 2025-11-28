@@ -151,12 +151,12 @@ export const isPastDate = (date: Date): boolean => {
 };
 
 /**
- * Format currency (Indian Rupees)
+ * Format currency (British Pounds)
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'INR',
+    currency: 'GBP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
