@@ -86,7 +86,8 @@ export const completeOnboarding = async (req: Request, res: Response) => {
         aadharImage: aadharImageUrl || undefined,
         vehicleRegImage: vehicleRegImageUrl || undefined,
         onboardingCompleted: true,
-        status: 'PENDING_VERIFICATION', // Will be verified by admin
+        status: 'VERIFIED', // Auto-verified for now
+        verifiedAt: new Date(),
       },
     });
 
