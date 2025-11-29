@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { sendSuccess, sendError, generateOrderNumber } from '../utils/helpers';
-import { calculateRoute } from '../services/mapService';
+import { calculateRoute, checkUlezZone } from '../services/mapService';
 import { calculatePrice, calculateDriverEarnings } from '../services/pricingService';
 import { generateOrderOTP } from '../services/otpService';
 import { sendSMS } from '../services/smsService';
@@ -65,6 +65,18 @@ export const calculatePriceEstimate = async (req: Request, res: Response) => {
       storageDays = validation.days;
     }
 
+    // Check ULEZ zone using accurate Google Maps Geocoding API
+    const ulezCheck = await checkUlezZone(parseFloat(deliveryLat), parseFloat(deliveryLng));
+
+    console.log('🗺️ ULEZ Check:', {
+      deliveryLat,
+      deliveryLng,
+      isUlez: ulezCheck.isUlez,
+      locality: ulezCheck.locality,
+      administrativeArea: ulezCheck.administrativeArea,
+      success: ulezCheck.success
+    });
+
     // Calculate price using new pricing calculator
     const estimatePricingInput = {
       deliveryType: bookingType,
@@ -72,6 +84,9 @@ export const calculatePriceEstimate = async (req: Request, res: Response) => {
       loadSize: packageSize,
       dropPostcode: dropPostcode || '',
       dropAddress: dropAddress || '',
+      dropLat: parseFloat(deliveryLat),
+      dropLng: parseFloat(deliveryLng),
+      isUlezZone: ulezCheck.isUlez, // Use accurate API result
       numberOfHelpers: numberOfHelpers || 0,
       pickupFloors: pickupFloors || 0,
       pickupHasLift: pickupHasLift !== undefined ? pickupHasLift : true,
@@ -177,6 +192,18 @@ export const createOrder = async (req: Request, res: Response) => {
       storageDays = validation.days;
     }
 
+    // Check ULEZ zone using accurate Google Maps Geocoding API
+    const ulezCheck = await checkUlezZone(parseFloat(deliveryLat), parseFloat(deliveryLng));
+
+    console.log('🗺️ CREATE ORDER - ULEZ Check:', {
+      deliveryLat,
+      deliveryLng,
+      isUlez: ulezCheck.isUlez,
+      locality: ulezCheck.locality,
+      administrativeArea: ulezCheck.administrativeArea,
+      success: ulezCheck.success
+    });
+
     // Calculate price using new pricing calculator
     const pricingInput = {
       deliveryType: bookingType as 'URGENT' | 'SAME_DAY_DELIVERY' | 'SCHEDULED',
@@ -184,6 +211,9 @@ export const createOrder = async (req: Request, res: Response) => {
       loadSize: packageSize as 'SMALL' | 'MEDIUM' | 'LARGE',
       dropPostcode: receiverPostalCode || '',
       dropAddress: deliveryAddress,
+      dropLat: parseFloat(deliveryLat),
+      dropLng: parseFloat(deliveryLng),
+      isUlezZone: ulezCheck.isUlez, // Use accurate API result
       numberOfHelpers: numberOfHelpers || 0,
       pickupFloors: pickupFloors || 0,
       pickupHasLift: pickupHasLift !== undefined ? pickupHasLift : true,

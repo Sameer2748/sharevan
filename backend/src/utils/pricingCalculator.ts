@@ -20,9 +20,16 @@ export interface PricingInput {
   // Package details
   loadSize: 'SMALL' | 'MEDIUM' | 'LARGE';
 
-  // Location details
-  dropPostcode: string;
-  dropAddress: string;
+  // Location details (for fallback ULEZ check)
+  dropPostcode?: string;
+  dropAddress?: string;
+
+  // Coordinates for accurate ULEZ check
+  dropLat?: number;
+  dropLng?: number;
+
+  // ULEZ override (if already checked via API)
+  isUlezZone?: boolean;
 
   // Helper & stair details
   numberOfHelpers?: number;
@@ -244,9 +251,21 @@ export function calculateDeliveryPrice(input: PricingInput): PriceBreakdown {
   const mileageCharge = calculateMileageCharge(input.deliveryType, input.distanceInMiles);
   const loadVolumeCharge = calculateLoadVolumeCharge(input.loadSize);
 
-  const ulezResult = calculateUlezCharge(input.dropPostcode, input.dropAddress);
-  const ulezCharge = ulezResult.charge;
-  const isUlezZone = ulezResult.isUlez;
+  // Use ULEZ override if provided (from accurate Google Maps API check)
+  // Otherwise fallback to postcode/address check
+  let ulezCharge = 0;
+  let isUlezZone = false;
+
+  if (input.isUlezZone !== undefined) {
+    // Use the accurate API result
+    isUlezZone = input.isUlezZone;
+    ulezCharge = isUlezZone ? PRICING.ULEZ_SURCHARGE : 0;
+  } else {
+    // Fallback to postcode/address check
+    const ulezResult = calculateUlezCharge(input.dropPostcode || '', input.dropAddress || '');
+    ulezCharge = ulezResult.charge;
+    isUlezZone = ulezResult.isUlez;
+  }
 
   const stairCarryCharge = calculateStairCarryCharge(
     numberOfHelpers,

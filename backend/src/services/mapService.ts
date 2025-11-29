@@ -175,8 +175,90 @@ export const geocodeAddress = async (
   }
 };
 
+/**
+ * Check if coordinates are in ULEZ zone (London) using Google Maps Geocoding API
+ * More accurate than postcode prefix matching
+ */
+export const checkUlezZone = async (
+  lat: number,
+  lng: number
+): Promise<{
+  isUlez: boolean;
+  locality?: string;
+  administrativeArea?: string;
+  success: boolean;
+  error?: string;
+}> => {
+  try {
+    if (!env.GOOGLE_MAPS_API_KEY || env.GOOGLE_MAPS_API_KEY === '') {
+      // Fallback: return false if no API key
+      return {
+        isUlez: false,
+        success: false,
+        error: 'Google Maps API key not configured',
+      };
+    }
+
+    const response = await client.reverseGeocode({
+      params: {
+        latlng: `${lat},${lng}`,
+        key: env.GOOGLE_MAPS_API_KEY,
+      },
+      timeout: 5000,
+    });
+
+    if (response.data.status === 'OK' && response.data.results.length > 0) {
+      const result = response.data.results[0];
+      const addressComponents = result.address_components;
+
+      let locality = '';
+      let administrativeArea = '';
+      let postalTown = '';
+
+      // Extract location information from address components
+      for (const component of addressComponents) {
+        if (component.types.includes('postal_town' as any)) {
+          postalTown = component.long_name.toLowerCase();
+        }
+        if (component.types.includes('locality' as any)) {
+          locality = component.long_name.toLowerCase();
+        }
+        if (component.types.includes('administrative_area_level_2' as any)) {
+          administrativeArea = component.long_name.toLowerCase();
+        }
+      }
+
+      // Check if location is in Greater London
+      // ULEZ covers all of Greater London as of August 2023
+      const isInLondon =
+        postalTown === 'london' ||
+        locality === 'london' ||
+        administrativeArea === 'greater london' ||
+        postalTown.includes('london') ||
+        locality.includes('london');
+
+      return {
+        isUlez: isInLondon,
+        locality,
+        administrativeArea,
+        success: true,
+      };
+    } else {
+      throw new Error(`Reverse geocoding failed: ${response.data.status}`);
+    }
+  } catch (error: any) {
+    console.error('Error checking ULEZ zone:', error);
+    return {
+      isUlez: false,
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
 export default {
   calculateRoute,
   reverseGeocode,
   geocodeAddress,
+  checkUlezZone,
 };
