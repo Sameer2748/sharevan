@@ -876,7 +876,7 @@ export default function BookingPage() {
               src={loginIllustration}
               alt="Driver"
               priority
-              className="w-[280px] max-w-none drop-shadow-[0_25px_35px_rgba(0,0,0,0.25)]"
+              className="w-[478px] max-w-none drop-shadow-[0_25px_35px_rgba(0,0,0,0.25)] mx-auto"
             />
 
             <div className="absolute bottom-0 w-full px-5 pb-8">

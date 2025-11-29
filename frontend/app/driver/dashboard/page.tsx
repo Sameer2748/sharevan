@@ -479,7 +479,11 @@ export default function DriverDashboard() {
                   <div className="flex items-center justify-between mb-4 bg-red-50 rounded-xl px-4 py-2.5">
                     <span className="text-sm font-semibold text-red-600">Urgent Delivery</span>
                     <span className="text-sm font-medium text-red-600">
-                      Drop by {new Date(activeOrder.urgentDeliveryTime || activeOrder.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      Drop by {(() => {
+                        const estimatedDuration = activeOrder.estimatedDuration || 30; // minutes from Google Maps
+                        const dropTime = new Date(Date.now() + estimatedDuration * 60000);
+                        return dropTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                      })()}
                     </span>
                   </div>
                 )}
@@ -555,20 +559,9 @@ export default function DriverDashboard() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Number of Package</p>
-                  <p className="text-gray-900 font-medium">1</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Drop of Time</p>
-                  <p className="text-red-600 font-medium">
-                    {new Date(selectedRide.createdAt).toLocaleTimeString('en-GB', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-500">Number of Package</p>
+                <p className="text-gray-900 font-medium">1</p>
               </div>
 
               <div>
