@@ -146,7 +146,7 @@ export default function HomePage() {
                 Book a Van
               </Link>
               <Link
-                href="/driver/login"
+                href="/auth/login?role=driver"
                 className="bg-transparent text-white px-6 py-2.5 rounded-full font-semibold text-base hover:bg-white/10 transition-all border-2 border-white"
               >
                 Driver Login
@@ -328,8 +328,8 @@ export default function HomePage() {
       </section>
 
       {/* Why Sharevan Section */}
-      <section id="why-sharevan" className="min-h-screen lg:h-screen lg:overflow-hidden flex items-center py-8 lg:py-8 px-4 sm:px-6 lg:px-0" style={{ background: 'linear-gradient(to bottom, #103EF7, #092491)' }}>
-        <div className="w-full max-w-7xl mx-auto">
+      <section id="why-sharevan" className="min-h-screen lg:h-screen lg:overflow-hidden flex items-center py-8 lg:py-8 pr-4 sm:pr-6 lg:px-0" style={{ background: 'linear-gradient(to bottom, #103EF7, #092491)' }}>
+        <div className="w-full max-w-7xl lg:mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-6 lg:gap-6 items-center">
             {/* Phone Image - Stick to left on all screens */}
             <div className="flex justify-start order-2 lg:order-1 pl-0">
@@ -345,7 +345,7 @@ export default function HomePage() {
             </div>
 
             {/* Right Side - Heading + Cards */}
-            <div className="order-1 lg:order-2 px-4 lg:pr-16">
+            <div className="order-1 lg:order-2 px-4 sm:px-6 lg:pr-16">
               {/* Heading Section */}
               <div className="mb-4 lg:mb-5">
                 <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">Why Sharevan?</h2>
@@ -491,56 +491,107 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#F7F7FD] text-gray-700 py-12 md:py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 md:gap-12 mb-8">
-            <div>
-              <h3 className="text-[#103EF7] font-bold text-xl mb-4">sharevan</h3>
+      <footer className="bg-white text-gray-700 py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          {/* Logo - Separate on small screens, part of grid on md+ */}
+          <div className="mb-8 md:hidden">
+            <h3 className="text-[#103EF7] font-bold text-2xl">sharevan</h3>
+          </div>
+
+          {/* Main Content Grid - Single grid with all 6 sections */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+            {/* Logo Column - Hidden on small, shows on md+ */}
+            <div className="hidden md:block md:row-span-2">
+              <h3 className="text-[#103EF7] font-bold text-2xl">sharevan</h3>
             </div>
+
+            {/* Row 1, Col 1 - SELL A HOME */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">SELL A HOME</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">SELL A HOME</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Request an offer</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Pricing</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Reviews</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Stories</Link></li>
               </ul>
             </div>
+
+            {/* Row 1, Col 2 - BUY, RENT AND SELL */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">BUY A HOME</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Finance</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">BUY, RENT AND SELL</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">BUY, RENT AND SELL</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy and sell properties</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Rent home</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Builder trade-up</Link></li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">ABOUT</h4>
-              <ul className="space-y-2 text-sm">
+
+            {/* Row 1, Col 3 (lg only) - ABOUT */}
+            <div className="hidden lg:block">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">ABOUT</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#about" className="hover:text-gray-900 transition-colors">Company</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Contact</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li>
               </ul>
             </div>
+
+            {/* Row 2, Col 1 - ABOUT (visible on small/md, hidden on lg) */}
+            <div className="lg:hidden">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">ABOUT</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li><Link href="#about" className="hover:text-gray-900 transition-colors">Company</Link></li>
+                <li><Link href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Contact</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li>
+              </ul>
+            </div>
+
+            {/* Row 2, Col 2 - BUY A HOME */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">TERMS & PRIVACY</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">BUY A HOME</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Finance</Link></li>
+              </ul>
+            </div>
+
+            {/* Row 2, Col 3 (md+) - TERMS & PRIVACY */}
+            <div className="hidden md:block">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">TERMS & PRIVACY</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Trust & Safety</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4 text-sm">RESOURCES</h4>
-              <ul className="space-y-2 text-sm">
+
+            {/* Row 2, Col 4 (lg only) - RESOURCES */}
+            <div className="hidden lg:block">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">RESOURCES</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Blog</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Guides</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">FAQ</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Help Center</Link></li>
+              </ul>
+            </div>
+
+            {/* Row 3, Col 1 (small only) - TERMS & PRIVACY */}
+            <div className="md:hidden">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">TERMS & PRIVACY</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Trust & Safety</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
+              </ul>
+            </div>
+
+            {/* Row 3, Col 2 - RESOURCES */}
+            <div className="lg:hidden">
+              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">RESOURCES</h4>
+              <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Blog</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">Guides</Link></li>
                 <li><Link href="#" className="hover:text-gray-900 transition-colors">FAQ</Link></li>
@@ -549,19 +600,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-300 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-600">©2021 Estatery. All rights reserved</p>
-            <div className="flex items-center gap-4">
-              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-500">©2021 Estatery. All rights reserved</p>
+            <div className="flex items-center gap-6">
+              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
                 <Facebook className="w-5 h-5" />
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
                 <Instagram className="w-5 h-5" />
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
                 <Twitter className="w-5 h-5" />
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
                 <Linkedin className="w-5 h-5" />
               </Link>
             </div>

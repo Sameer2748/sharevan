@@ -12,6 +12,7 @@ import {
   X,
   Phone,
   Map,
+  ArrowLeft,
 } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -394,8 +395,13 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-[#F6F8FF]">
       {currentStep !== 'driverAssigned' && (
-        <div className="relative z-30">
-          <Navbar title="Book Delivery" showBack onBack={handleBack} />
+        <div className="relative z-30 px-5 pt-4 pb-2">
+          <button
+            onClick={handleBack}
+            className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-900" />
+          </button>
         </div>
       )}
 
