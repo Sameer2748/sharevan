@@ -6,15 +6,14 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { driverAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { Package, Calendar, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { Package, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function DriverHistoryPage() {
   const router = useRouter();
   const { isAuthenticated, hasHydrated, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all');
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -25,15 +24,13 @@ export default function DriverHistoryPage() {
     }
 
     fetchOrders();
-  }, [hasHydrated, isAuthenticated, user?.role, filter]);
+  }, [hasHydrated, isAuthenticated, user?.role]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await driverAPI.getOrderHistory(filter === 'all' ? undefined : filter);
-      const allOrders = response.data.data.orders || [];
-
-      setOrders(allOrders);
+      const response = await driverAPI.getOrderHistory();
+      setOrders(response.data.data.orders || []);
     } catch (error: any) {
       toast.error('Failed to load orders');
     } finally {
@@ -43,113 +40,114 @@ export default function DriverHistoryPage() {
 
   if (!hasHydrated || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-[#103EF7]" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <LoadingSpinner size="lg" text="Loading history..." />
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#EEF2FF]">
-      <div className="bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] px-5 pt-12 pb-20">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="text-white hover:bg-white/10 p-2 rounded-full transition"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold text-white">Ride History</h1>
-        </div>
+  const filteredOrders = orders;
 
-        <div className="flex gap-2 overflow-x-auto">
-          {[
-            { key: 'all', label: 'All Rides' },
-            { key: 'completed', label: 'Completed' },
-            { key: 'cancelled', label: 'Cancelled' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                filter === tab.key
-                  ? 'bg-white text-[#0F58FF] shadow-md'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+  const getStatusInfo = (status: string) => {
+    const delayedStatuses = ['DELAYED', 'FAILED', 'CANCELLED'];
+    if (delayedStatuses.includes(status)) {
+      return {
+        label: 'Cancelled',
+        badge: 'bg-[#FEECEC] text-[#E04B4B]',
+        stripBg: 'bg-[#FEECEC]',
+        stripText: 'text-[#DC2626]',
+      };
+    }
+
+    const arrivedStatuses = ['DELIVERED', 'REACHED_DESTINATION'];
+    if (arrivedStatuses.includes(status)) {
+      return {
+        label: 'Delivered on',
+        badge: 'bg-[#E9F6FF] text-[#1C64F2]',
+        stripBg: 'bg-[#E7F9E7]',
+        stripText: 'text-[#15803D]',
+      };
+    }
+
+    return {
+      label: 'Completed',
+      badge: 'bg-[#E7F9E7] text-[#16A34A]',
+      stripBg: 'bg-[#E7F9E7]',
+      stripText: 'text-[#15803D]',
+    };
+  };
+
+  const formatRoute = (order: any) => {
+    const pickup = order.pickupAddress?.split(',')[0] || 'Pickup';
+    const drop = order.deliveryAddress?.split(',')[0] || 'Drop';
+    return `${pickup} → ${drop}`;
+  };
+
+  const getStatusTime = (order: any) => {
+    const ts =
+      order.deliveredAt ||
+      order.cancelledAt ||
+      order.completedAt ||
+      order.updatedAt ||
+      order.createdAt;
+    return ts ? formatDateTime(ts) : '';
+  };
+
+  const getEarnings = (order: any) => {
+    return order.driverEarnings || order.totalPrice || order.finalPrice || order.estimatedPrice || '0';
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F7F7F7]">
+      <div className="flex items-center gap-3 px-4 pt-6 pb-4">
+        <button
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-700" />
+        </button>
+        <h1 className="text-xl font-semibold text-gray-900">History</h1>
       </div>
 
-      <div className="relative -mt-12 mx-auto max-w-[430px] px-5 pb-6">
-        {orders.length === 0 ? (
-          <div className="bg-white rounded-[28px] p-12 text-center shadow-lg">
-            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+      <div className="px-4 pb-8 space-y-5">
+        {filteredOrders.length === 0 ? (
+          <div className="bg-white rounded-3xl p-10 text-center shadow-sm">
+            <Package className="w-14 h-14 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No rides yet</h3>
-            <p className="text-sm text-gray-500">
-              {filter === 'completed'
-                ? 'You have no completed rides'
-                : filter === 'cancelled'
-                ? 'You have no cancelled rides'
-                : 'Your ride history will appear here'}
+            <p className="text-sm text-gray-500 mb-6">
+              Your delivery history will appear here once you complete rides.
             </p>
+            <button
+              onClick={() => router.push('/driver/dashboard')}
+              className="bg-primary text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-600 transition-all"
+            >
+              Go to Dashboard
+            </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {orders.map((order: any) => (
-              <button
-                key={order.id}
-                onClick={() => router.push(`/driver/ride/${order.id}`)}
-                className="w-full bg-white rounded-[24px] p-5 text-left shadow-md hover:shadow-lg transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-base font-bold text-gray-900">#{order.orderNumber}</p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                      <Calendar className="w-3 h-3" />
-                      {formatDateTime(order.createdAt)}
-                    </div>
+          <div className="space-y-3">
+            {filteredOrders.map((order: any) => {
+              const statusInfo = getStatusInfo(order.status);
+              return (
+                <button
+                  key={order.id}
+                  onClick={() => router.push(`/driver/ride/${order.id}`)}
+                  className="w-full rounded-3xl bg-white pt-5 px-5 pb-0 text-left shadow-sm hover:shadow-md transition-all border border-gray-100"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-gray-500 mb-2">
+                    <span>ID: {order.orderNumber}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
                   </div>
-                  <StatusBadge status={order.status} />
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 mb-0.5">Pickup</p>
-                      <p className="text-sm text-gray-900 line-clamp-1">{order.pickupAddress}</p>
-                    </div>
+                  <p className="text-lg font-semibold text-gray-900">{formatRoute(order)}</p>
+                  <div
+                    className={`mt-4 -mx-5 px-5 py-2 rounded-b-3xl text-xs font-semibold flex items-center justify-between ${statusInfo.stripBg} ${statusInfo.stripText}`}
+                  >
+                    <span>{statusInfo.label}</span>
+                    <span>{getStatusTime(order)}</span>
                   </div>
-                  <div className="border-l-2 border-dashed border-gray-300 ml-1 h-4" />
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 mb-0.5">Delivery</p>
-                      <p className="text-sm text-gray-900 line-clamp-1">{order.deliveryAddress}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-gray-600 capitalize">{order.packageSize}</span>
-                    <span className="text-gray-300">•</span>
-                    <span className="text-gray-600">
-                      {order.distance ? order.distance.toFixed(1) : '0.0'} miles
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-[#0F58FF]">
-                      £{order.totalPrice || order.finalPrice || order.estimatedPrice || '0'}
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

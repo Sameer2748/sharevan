@@ -2,14 +2,33 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { TruckIcon, Package, MapPin, Clock, Shield, Star, ChevronDown, MessageCircle, Zap } from 'lucide-react'
+import Image from 'next/image'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useEffect, useState } from 'react'
+import { ArrowLeft, Facebook, Instagram, Twitter, Linkedin, Menu, X } from 'lucide-react'
+
+// Import images
+import hero1 from '@icons/hero-1.png'
+import hero2 from '@icons/hero-2.png'
+import hero3 from '@icons/hero-3.png'
+import step1 from '@icons/step-1.png'
+import step2 from '@icons/step-2.png'
+import step3 from '@icons/step-3.png'
+import whySharevanImage from '@icons/why-sharevan-section.png'
+import aboutUsImage from '@icons/about-us-image.jpg'
+import iphoneFrame from '@icons/iphone-outer-new.webp'
 
 export default function HomePage() {
   const router = useRouter()
   const { isAuthenticated, user, hasHydrated } = useAuthStore()
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  })
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!hasHydrated) return
@@ -29,277 +48,526 @@ export default function HomePage() {
     return null
   }
 
-  const faqs = [
-    {
-      question: "How do I book a delivery?",
-      answer: "Simply sign up as a user, enter your pickup and delivery addresses, select your package size, and confirm. A nearby driver will accept your request within minutes."
-    },
-    {
-      question: "How much does delivery cost?",
-      answer: "Pricing is based on distance, package size, and delivery type (standard or urgent). You'll see the exact price before confirming your booking."
-    },
-    {
-      question: "Can I track my delivery in real-time?",
-      answer: "Yes! Once a driver accepts your order, you can track their location in real-time on the map and receive live updates on your delivery status."
-    },
-    {
-      question: "How do I become a driver?",
-      answer: "Sign up as a driver, complete the verification process by uploading your documents (license, insurance, vehicle details), and start accepting delivery requests once approved."
-    },
-    {
-      question: "What payment methods are accepted?",
-      answer: "We accept all major payment methods including credit/debit cards, digital wallets, and cash on delivery for select areas."
-    },
-    {
-      question: "How long does delivery take?",
-      answer: "Standard deliveries typically take 2-4 hours, while urgent deliveries are completed within 1-2 hours depending on distance and traffic conditions."
-    }
-  ]
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Handle form submission
+    console.log('Form submitted:', formData)
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-          <div className="text-center text-white space-y-8">
+      {/* Navigation Header */}
+      <header className="absolute top-4 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 shadow-lg">
+          <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full mb-4">
-              <TruckIcon className="w-10 h-10" />
+            <div className="flex items-center">
+              <div className="bg-white/10 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
+                <span className="text-white font-semibold text-base sm:text-lg">sharevan</span>
+              </div>
             </div>
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="#about" className="text-white hover:text-blue-200 transition-colors">About</Link>
+              <Link href="#how-it-works" className="text-white hover:text-blue-200 transition-colors">How It Works?</Link>
+              <Link href="#why-sharevan" className="text-white hover:text-blue-200 transition-colors">Why Choose Us</Link>
+              <Link href="/auth/login" className="text-white hover:text-blue-200 transition-colors">Download</Link>
+            </nav>
 
-            {/* Heading */}
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              ShareVan
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden bg-white/10 backdrop-blur-sm p-2 rounded-lg hover:bg-white/20 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5 text-white" />
+              ) : (
+                <Menu className="w-5 h-5 text-white" />
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Dropdown Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 pt-4 border-t border-white/20">
+              <nav className="flex flex-col gap-4 pb-2">
+                <Link 
+                  href="#about" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-white hover:text-blue-200 transition-colors py-2"
+                >
+                  About
+                </Link>
+                <Link 
+                  href="#how-it-works" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-white hover:text-blue-200 transition-colors py-2"
+                >
+                  How It Works?
+                </Link>
+                <Link 
+                  href="#why-sharevan" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-white hover:text-blue-200 transition-colors py-2"
+                >
+                  Why Choose Us
+                </Link>
+                <Link 
+                  href="/auth/login" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-white hover:text-blue-200 transition-colors py-2"
+                >
+                  Download
+                </Link>
+              </nav>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative pt-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: 'linear-gradient(to bottom, #103EF7, #092491)', height: '100vh', maxHeight: '100vh' }}>
+        <div className="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+          {/* Text Content - Top Section */}
+          <div className="text-white space-y-2 pt-4 pb-4 md:pt-6 lg:pt-8">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+              Move Smarter with ShareVan
             </h1>
-            <p className="text-xl md:text-2xl text-blue-50 max-w-3xl mx-auto">
-              Your Logistics Partner - Fast, Reliable Delivery Service
+            <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl">
+              Choose your van, match with a trusted driver, track live, and get safe, same-day delivery across the UK.
             </p>
-            <p className="text-lg text-blue-100 max-w-2xl mx-auto">
-              Connect with local drivers for quick and secure package delivery across the UK
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <div className="flex gap-4 pt-3">
               <Link
                 href="/booking"
-                className="bg-white text-[#0F58FF] px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+                className="bg-white text-[#103EF7] px-6 py-2.5 rounded-full font-semibold text-base hover:bg-blue-50 transition-all shadow-lg"
               >
-                Book a Delivery
+                Book a Van
               </Link>
               <Link
-                href="/auth/login?role=driver"
-                className="bg-transparent border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white/10 transition-all"
+                href="/driver/login"
+                className="bg-transparent text-white px-6 py-2.5 rounded-full font-semibold text-base hover:bg-white/10 transition-all border-2 border-white"
               >
-                Become a Driver
+                Driver Login
               </Link>
             </div>
           </div>
-        </div>
 
-        {/* Wave decoration */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
-          </svg>
+          {/* Phone Images - Bottom Section */}
+          <div className="relative flex items-end justify-center pb-0">
+            {/* Mobile: Single Phone with iPhone Frame */}
+            <div className="md:hidden relative w-full max-w-[280px] sm:max-w-[320px] mx-auto" style={{ aspectRatio: '9/19' }}>
+              {/* iPhone Frame Background */}
+              <Image
+                src={iphoneFrame}
+                alt="iPhone Frame"
+                fill
+                className="object-contain object-top drop-shadow-2xl z-10"
+              />
+              {/* App Screenshot */}
+              <div className="absolute top-[12px] left-[2.5%] right-[2.5%] bottom-[12px] z-0 rounded-[8%] overflow-hidden">
+                <Image
+                  src={hero3}
+                  alt="ShareVan App"
+                  fill
+                  className="object-cover object-top"
+                />
+              </div>
+            </div>
+
+            {/* Desktop & Medium: Three Phones - Full Width Distribution */}
+            <div className="hidden md:flex relative w-full items-end justify-between">
+              {/* First Phone - Left (Lowest) */}
+              <div className="translate-y-[40px] lg:translate-y-[50px] xl:translate-y-[60px]">
+                <div className="relative w-[200px] lg:w-[280px] xl:w-[330px] animate-slide-up-1" style={{ aspectRatio: '9/19' }}>
+                  {/* iPhone Frame Background */}
+                  <Image
+                    src={iphoneFrame}
+                    alt="iPhone Frame"
+                    fill
+                    className="object-contain object-top drop-shadow-2xl z-10"
+                  />
+                  {/* App Screenshot */}
+                  <div className="absolute top-[12px] left-[2.5%] right-[2.5%] bottom-[12px] z-0 rounded-[8%] overflow-hidden">
+                    <Image
+                      src={hero1}
+                      alt="ShareVan App"
+                      fill
+                      className="object-cover object-top"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Second Phone - Center (Middle) */}
+              <div className="translate-y-[20px] lg:translate-y-[25px] xl:translate-y-[30px]">
+                <div className="relative w-[240px] lg:w-[320px] xl:w-[370px] animate-slide-up-2" style={{ aspectRatio: '9/19' }}>
+                  {/* iPhone Frame Background */}
+                  <Image
+                    src={iphoneFrame}
+                    alt="iPhone Frame"
+                    fill
+                    className="object-contain object-top drop-shadow-2xl z-10"
+                  />
+                  {/* App Screenshot */}
+                  <div className="absolute top-[12px] left-[2.5%] right-[2.5%] bottom-[12px] z-0 rounded-[8%] overflow-hidden">
+                    <Image
+                      src={hero2}
+                      alt="ShareVan App"
+                      fill
+                      className="object-cover object-top"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Third Phone - Right (Highest) - Taller */}
+              <div className="translate-y-[0px]">
+                <div className="relative w-[260px] lg:w-[340px] xl:w-[390px] animate-slide-up-3" style={{ aspectRatio: '9/19' }}>
+                  {/* iPhone Frame Background */}
+                  <Image
+                    src={iphoneFrame}
+                    alt="iPhone Frame"
+                    fill
+                    className="object-contain object-top drop-shadow-2xl z-10"
+                  />
+                  {/* App Screenshot */}
+                  <div className="absolute top-[12px] left-[2.5%] right-[2.5%] bottom-[12px] z-0 rounded-[8%] overflow-hidden">
+                    <Image
+                      src={hero3}
+                      alt="ShareVan App"
+                      fill
+                      className="object-cover object-top"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose ShareVan?
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-10 md:py-12 lg:py-10 px-4 sm:px-6 lg:px-8 bg-gray-50 lg:h-screen lg:flex lg:items-center lg:overflow-hidden">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="text-center mb-6 md:mb-8 lg:mb-8">
+            <h2 className="text-2xl md:text-3xl lg:text-3xl font-bold text-gray-900 mb-2">
+              How Does this Work?
             </h2>
-            <p className="text-lg text-gray-600">
-              Experience the best in delivery services
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-2xl flex items-center justify-center mb-6">
-                <Zap className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Fast Delivery</h3>
-              <p className="text-gray-600">
-                Get your packages delivered within hours with our urgent delivery option
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-2xl flex items-center justify-center mb-6">
-                <MapPin className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Live Tracking</h3>
-              <p className="text-gray-600">
-                Track your delivery in real-time with GPS and get instant updates
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-2xl flex items-center justify-center mb-6">
-                <Shield className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Secure & Safe</h3>
-              <p className="text-gray-600">
-                All drivers are verified with background checks and insurance coverage
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-2xl flex items-center justify-center mb-6">
-                <MessageCircle className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">In-App Chat</h3>
-              <p className="text-gray-600">
-                Communicate with your driver in real-time through our chat feature
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-2xl flex items-center justify-center mb-6">
-                <Star className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Rated Drivers</h3>
-              <p className="text-gray-600">
-                Choose from highly-rated drivers with customer reviews and ratings
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 hover:shadow-xl transition-shadow">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-2xl flex items-center justify-center mb-6">
-                <Clock className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">24/7 Service</h3>
-              <p className="text-gray-600">
-                Book deliveries anytime, anywhere with our round-the-clock availability
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-lg text-gray-600">
-              Simple, fast, and reliable delivery in 3 easy steps
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-5 lg:gap-6">
             {/* Step 1 */}
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-full text-white text-2xl font-bold mb-6">
-                1
+            <div className="text-left">
+              <div className="mb-2 lg:mb-3">
+                <div className="rounded-3xl p-2 w-full" style={{ backgroundColor: '#F3F7FF', border: '1px solid #D4E2FF' }}>
+                  <div className="relative w-full overflow-hidden rounded-2xl h-[300px] md:h-[320px] lg:h-[350px]">
+                    <Image
+                      src={step1}
+                      alt="Book in Minutes"
+                      fill
+                      className="object-contain object-top drop-shadow-2xl"
+                    />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Book Your Delivery</h3>
-              <p className="text-gray-600">
-                Enter pickup and delivery addresses, select package size, and confirm booking
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">Step 1</h3>
+                <p className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
+                  Book in Minutes - Tell us what you need to move, choose the van size, and select your pickup time.
+                </p>
+              </div>
             </div>
 
             {/* Step 2 */}
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-full text-white text-2xl font-bold mb-6">
-                2
+            <div className="text-left">
+              <div className="mb-2 lg:mb-3">
+                <div className="rounded-3xl p-2 w-full" style={{ backgroundColor: '#F3F7FF', border: '1px solid #D4E2FF' }}>
+                  <div className="relative w-full overflow-hidden rounded-2xl h-[300px] md:h-[320px] lg:h-[350px]">
+                    <Image
+                      src={step2}
+                      alt="Instant Driver Match"
+                      fill
+                      className="object-contain object-top drop-shadow-2xl"
+                    />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Driver Accepts</h3>
-              <p className="text-gray-600">
-                A nearby verified driver accepts your request and heads to pickup location
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">Step 2</h3>
+                <p className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
+                  Instant Driver Match - We connect you with a trusted local driver closest to your location.
+                </p>
+              </div>
             </div>
 
             {/* Step 3 */}
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#0F58FF] to-[#62B3FF] rounded-full text-white text-2xl font-bold mb-6">
-                3
+            <div className="text-left">
+              <div className="mb-2 lg:mb-3">
+                <div className="rounded-3xl p-2 w-full" style={{ backgroundColor: '#F3F7FF', border: '1px solid #D4E2FF' }}>
+                  <div className="relative w-full overflow-hidden rounded-2xl h-[300px] md:h-[320px] lg:h-[350px]">
+                    <Image
+                      src={step3}
+                      alt="Delivered On Time"
+                      fill
+                      className="object-contain object-top drop-shadow-2xl"
+                    />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Track & Receive</h3>
-              <p className="text-gray-600">
-                Track your delivery in real-time and receive your package safely
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">Step 3</h3>
+                <p className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
+                  Delivered On Time - Get your items moved swiftly and professionally, anywhere in the UK.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-lg text-gray-600">
-              Everything you need to know about ShareVan
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-2xl overflow-hidden hover:border-[#0F58FF] transition-colors"
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full px-6 py-5 flex items-center justify-between text-left bg-white hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-semibold text-gray-900 pr-4">{faq.question}</span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-[#0F58FF] flex-shrink-0 transition-transform ${
-                      openFaq === index ? 'transform rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === index && (
-                  <div className="px-6 py-4 bg-blue-50 border-t border-gray-200">
-                    <p className="text-gray-700">{faq.answer}</p>
-                  </div>
-                )}
+      {/* Why Sharevan Section */}
+      <section id="why-sharevan" className="min-h-screen lg:h-screen lg:overflow-hidden flex items-center py-8 lg:py-8 px-4 sm:px-6 lg:px-0" style={{ background: 'linear-gradient(to bottom, #103EF7, #092491)' }}>
+        <div className="w-full max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-6 lg:gap-6 items-center">
+            {/* Phone Image - Stick to left on all screens */}
+            <div className="flex justify-start order-2 lg:order-1 pl-0">
+              <div className="relative w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96" style={{ aspectRatio: '9/19' }}>
+                <Image
+                  src={whySharevanImage}
+                  alt="ShareVan App"
+                  fill
+                  className="object-contain drop-shadow-2xl"
+                  priority
+                />
               </div>
-            ))}
+            </div>
+
+            {/* Right Side - Heading + Cards */}
+            <div className="order-1 lg:order-2 px-4 lg:pr-16">
+              {/* Heading Section */}
+              <div className="mb-4 lg:mb-5">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">Why Sharevan?</h2>
+                <p className="text-sm md:text-base text-white/90">
+                  Choose ShareVan and experience the UK's most dependable van-with-driver service
+                </p>
+              </div>
+
+              {/* Benefits Cards */}
+              <div className="space-y-3 lg:space-y-3">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-4 border border-white/20">
+                  <h3 className="text-base lg:text-lg font-bold text-white mb-1">Always Available</h3>
+                  <p className="text-white/90 text-xs lg:text-sm leading-snug">
+                    Need it now? Need it later? ShareVan offers round-the-clock availability, ensuring a van is always ready when you are.
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-4 border border-white/20">
+                  <h3 className="text-base lg:text-lg font-bold text-white mb-1">Exceptional Service Quality</h3>
+                  <p className="text-white/90 text-xs lg:text-sm leading-snug">
+                    Our experienced drivers handle every job with care, professionalism, and efficiency every time.
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-4 border border-white/20">
+                  <h3 className="text-base lg:text-lg font-bold text-white mb-1">Transparent & Fair Pricing</h3>
+                  <p className="text-white/90 text-xs lg:text-sm leading-snug">
+                    No surprises. No guesswork. You see the price upfront before you book.
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-4 border border-white/20">
+                  <h3 className="text-base lg:text-lg font-bold text-white mb-1">Real-Time Tracking & Support</h3>
+                  <p className="text-white/90 text-xs lg:text-sm leading-snug">
+                    Stay updated with live GPS tracking and responsive customer support throughout your move.
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-4 border border-white/20">
+                  <h3 className="text-base lg:text-lg font-bold text-white mb-1">For Every Kind of Move</h3>
+                  <p className="text-white/90 text-xs lg:text-sm leading-snug">
+                    When reliability, speed, and professionalism matter ShareVan delivers.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF]">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-blue-50 mb-10">
-            Join thousands of satisfied customers using ShareVan for their delivery needs
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/booking"
-              className="bg-white text-[#0F58FF] px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all shadow-xl"
-            >
-              Start Sending Packages
-            </Link>
-            <Link
-              href="/auth/login?role=driver"
-              className="bg-transparent border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white/10 transition-all"
-            >
-              Start Earning as Driver
-            </Link>
+      {/* About Us Section */}
+      <section id="about" className="h-screen overflow-hidden flex items-center py-8 lg:py-12 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-6xl mx-auto w-full">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 lg:mb-6">About Us</h2>
+
+          <div className="space-y-3 lg:space-y-4 text-gray-700 text-sm lg:text-base mb-6 lg:mb-8">
+            <p>ShareVan is the UK's modern solution for fast, affordable and reliable van-with-driver services.</p>
+            <p>
+              Built with a mission to simplify moving and logistics, ShareVan combines smart technology with a trusted driver network to help individuals and businesses transport goods without stress.
+            </p>
+            <p>
+              Whether it's a last-minute store pickup, a home relocation, furniture delivery, or business logistics, ShareVan ensures safe handling, transparent pricing and timely delivery. Our platform is designed to take the complexity out of moving—giving you a seamless, on-demand experience from start to finish.
+            </p>
+            <p className="font-semibold text-gray-900">Move smarter. Move easier. Move with ShareVan.</p>
+          </div>
+
+          {/* About Image */}
+          <div className="w-full h-48 md:h-64 lg:h-72 rounded-2xl shadow-lg overflow-hidden">
+            <Image
+              src={aboutUsImage}
+              alt="ShareVan Delivery Service"
+              width={1200}
+              height={600}
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </section>
+
+      {/* Get in Touch Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 md:mb-12">
+            Get in Touch
+          </h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#103EF7] focus:border-transparent"
+                placeholder="Rachel Joe"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#103EF7] focus:border-transparent"
+                placeholder="Rachel@domain.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#103EF7] focus:border-transparent"
+                placeholder="+971...."
+              />
+            </div>
+            <div className="md:col-span-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+              <input
+                type="text"
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#103EF7] focus:border-transparent"
+                placeholder="Subject"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+              <textarea
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                rows={1}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#103EF7] focus:border-transparent resize-none"
+                placeholder="Enter Query"
+              />
+            </div>
+            <div className="md:col-span-3">
+              <button
+                type="submit"
+                className="bg-[#103EF7] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#092491] transition-colors shadow-lg"
+              >
+                Send my message
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#F7F7FD] text-gray-700 py-12 md:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 md:gap-12 mb-8">
+            <div>
+              <h3 className="text-[#103EF7] font-bold text-xl mb-4">sharevan</h3>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm">SELL A HOME</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Request an offer</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Pricing</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Reviews</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Stories</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm">BUY A HOME</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Finance</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm">BUY, RENT AND SELL</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy and sell properties</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Rent home</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Builder trade-up</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm">ABOUT</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="#about" className="hover:text-gray-900 transition-colors">Company</Link></li>
+                <li><Link href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Contact</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm">TERMS & PRIVACY</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Trust & Safety</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm">RESOURCES</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Blog</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Guides</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">FAQ</Link></li>
+                <li><Link href="#" className="hover:text-gray-900 transition-colors">Help Center</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-300 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-600">©2021 Estatery. All rights reserved</p>
+            <div className="flex items-center gap-4">
+              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Facebook className="w-5 h-5" />
+              </Link>
+              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Instagram className="w-5 h-5" />
+              </Link>
+              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Twitter className="w-5 h-5" />
+              </Link>
+              <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Linkedin className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

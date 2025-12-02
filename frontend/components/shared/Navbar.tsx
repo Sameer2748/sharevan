@@ -37,8 +37,8 @@ export default function Navbar({ title, showBack = false, showProfile = true, on
             </button>
           )}
           <div>
-            <h1 className="text-xl font-bold">{title}</h1>
-            {user?.name && <p className="text-xs text-blue-100">{user.name}</p>}
+            <h1 className="text-xl font-bold text-white">{title}</h1>
+            {user?.name && <p className="text-xs text-white/90">{user.name}</p>}
           </div>
         </div>
 

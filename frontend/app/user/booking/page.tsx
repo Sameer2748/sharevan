@@ -12,8 +12,8 @@ import {
   X,
   Phone,
   Map,
+  ArrowLeft,
 } from 'lucide-react';
-import Navbar from '@/components/shared/Navbar';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import GooglePlacesAutocomplete from '@/components/GooglePlacesAutocomplete';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -24,6 +24,8 @@ import loginIllustration from '@icons/login-person.png';
 import parcelIcon1 from '@icons/parcel-select-icon-1.jpg';
 import parcelIcon2 from '@icons/parcel-select-icon-2.jpg';
 import parcelIcon3 from '@icons/parcel-select-icon-3.jpg';
+import driverTruckIcon from '@icons/driver-dashboard.png';
+import carIconForMap from '@icons/car-icon-for-map.png';
 import { initSocket, onDriverAssigned, offEvent } from '@/lib/socket';
 import { loadGoogleMapsScript } from '@/lib/googleMapsLoader';
 
@@ -58,7 +60,7 @@ const driverFallback = {
 
 export default function BookingPage() {
   const router = useRouter();
-  const { isAuthenticated, hasHydrated, token } = useAuthStore();
+  const { isAuthenticated, hasHydrated, token, user } = useAuthStore();
 
   const [authChecking, setAuthChecking] = useState(true);
   const [currentStep, setCurrentStep] = useState<Step>('locations');
@@ -386,8 +388,13 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-[#F6F8FF]">
       {currentStep !== 'driverAssigned' && (
-        <div className="relative z-30">
-          <Navbar title="Book Delivery" showBack onBack={handleBack} />
+        <div className="relative z-30 px-5 pt-4 pb-2">
+          <button
+            onClick={handleBack}
+            className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-900" />
+          </button>
         </div>
       )}
 
@@ -396,9 +403,9 @@ export default function BookingPage() {
           <div className="grid grid-cols-3 rounded-full bg-[#EFF2FF] p-1 text-sm font-medium">
             {(
               [
-                { key: 'URGENT', label: 'Urgent' },
-                { key: 'SAME_DAY_DELIVERY', label: 'Same Day' },
+                { key: 'SAME_DAY_DELIVERY', label: 'Pick Now' },
                 { key: 'SCHEDULED', label: 'Scheduled' },
+                { key: 'URGENT', label: 'Urgent' },
               ] as { key: BookingType; label: string }[]
             ).map((option) => {
               const active = bookingType === option.key;
@@ -422,7 +429,7 @@ export default function BookingPage() {
               className="flex w-full items-center justify-between rounded-2xl border border-[#E4E8F7] bg-white px-4 py-4 text-left shadow-sm"
             >
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-gray-400">Pickup Slot</p>
+                <p className="text-xs uppercase  text-gray-400">Pickup Slot</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {formattedSchedule || 'Select pickup date & time'}
                 </p>
@@ -456,14 +463,16 @@ export default function BookingPage() {
             />
           </div>
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">Suggestions</p>
-            <div className="mt-3 divide-y divide-[#EEF1FB] overflow-hidden rounded-2xl border border-[#EEF1FB] bg-white shadow-sm">
-              {locationSuggestions.map((suggestion) => (
+          <div className="-mx-5">
+            <p className="text-xs font-semibold uppercase  text-gray-400 mb-3 px-5">Suggestions</p>
+            <div className="overflow-hidden  border border-[#E4E8F7] bg-white">
+              {locationSuggestions.map((suggestion, index) => (
                 <button
                   key={suggestion.label}
                   onClick={() => handleSuggestionSelect(suggestion)}
-                  className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 transition hover:bg-[#F5F7FF]"
+                  className={`w-full px-5 py-5 text-left text-sm font-medium text-gray-900 transition hover:bg-[#F5F7FF] ${
+                    index !== locationSuggestions.length - 1 ? 'border-b border-[#EEF1FB]' : ''
+                  }`}
                 >
                   {suggestion.label}
                 </button>
@@ -524,44 +533,54 @@ export default function BookingPage() {
       {currentStep === 'recipientDetails' && (
         <MapSection pickup={formData.deliveryAddress}>
           <div className="pb-6">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">Recipient Details</h2>
-            <div className="space-y-2">
-              <input
-                value={formData.receiverName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, receiverName: e.target.value }))}
-                className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
-                placeholder="Name"
-              />
-              <input
-                value={formData.receiverPhone}
-                onChange={(e) => setFormData((prev) => ({ ...prev, receiverPhone: e.target.value }))}
-                className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
-                placeholder="Contact Number"
-              />
-              <input
-                value={formData.receiverAddressLine1}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, receiverAddressLine1: e.target.value }))
-                }
-                className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
-                placeholder="Address Line 1"
-              />
-              <input
-                value={formData.receiverAddressLine2}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, receiverAddressLine2: e.target.value }))
-                }
-                className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
-                placeholder="Address Line 2 (Optional)"
-              />
-              <input
-                value={formData.receiverPostalCode}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, receiverPostalCode: e.target.value }))
-                }
-                className="w-full rounded-xl border border-[#E3E7F6] bg-[#F8F9FF] px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#0F58FF] focus:bg-white focus:outline-none"
-                placeholder="Pin Code"
-              />
+            <h2 className="text-sm font-semibold text-gray-900 mb-4">Recipient Details</h2>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 focus-within:border-[#0F58FF] transition-colors">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                <input
+                  value={formData.receiverName}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, receiverName: e.target.value }))}
+                  className="w-full text-sm font-semibold text-gray-900 bg-transparent border-none outline-none p-0"
+                />
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 focus-within:border-[#0F58FF] transition-colors">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Contact Number</label>
+                <input
+                  value={formData.receiverPhone}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, receiverPhone: e.target.value }))}
+                  className="w-full text-sm font-semibold text-gray-900 bg-transparent border-none outline-none p-0"
+                />
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 focus-within:border-[#0F58FF] transition-colors">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Address Line 1</label>
+                <input
+                  value={formData.receiverAddressLine1}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, receiverAddressLine1: e.target.value }))
+                  }
+                  className="w-full text-sm font-semibold text-gray-900 bg-transparent border-none outline-none p-0"
+                />
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 focus-within:border-[#0F58FF] transition-colors">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Address Line 2</label>
+                <input
+                  value={formData.receiverAddressLine2}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, receiverAddressLine2: e.target.value }))
+                  }
+                  className="w-full text-sm font-semibold text-gray-900 bg-transparent border-none outline-none p-0"
+                />
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 focus-within:border-[#0F58FF] transition-colors">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Pin Code</label>
+                <input
+                  value={formData.receiverPostalCode}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, receiverPostalCode: e.target.value }))
+                  }
+                  className="w-full text-sm font-semibold text-gray-900 bg-transparent border-none outline-none p-0"
+                />
+              </div>
             </div>
 
             {/* Helper & Stair Details Section */}
@@ -720,7 +739,7 @@ export default function BookingPage() {
                 }
                 setCurrentStep('parcelSelection');
               }}
-              className="mt-4 w-full rounded-full bg-[#0F58FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
+              className="mt-4 w-full rounded-full bg-[#103EF7] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
             >
               Continue
             </button>
@@ -731,42 +750,79 @@ export default function BookingPage() {
       {currentStep === 'parcelSelection' && (
         <MapSection pickup={formData.deliveryAddress}>
           <div className="pb-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Select Your Parcel Size</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-4">Select Your Parcel Size</h2>
             <div className="grid grid-cols-2 gap-4 mb-6">
-              {[
-                { key: 'SMALL', title: 'Small Shipment', subtitle: '2 Boxes', image: parcelIcon1 },
-                { key: 'LARGE', title: 'Large Shipment', subtitle: '>10 Boxes', image: parcelIcon3 },
-                { key: 'MEDIUM', title: 'Medium Shipment', subtitle: '4 Boxes', image: parcelIcon2 },
-              ].map((option) => {
-                const active = formData.packageSize === option.key;
-                return (
-                  <button
-                    key={option.key}
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, packageSize: option.key as any }));
-                    }}
-                    className={`group flex flex-col justify-between overflow-hidden rounded-[26px] p-4 text-left transition-all ${
-                      active
-                        ? 'border-2 border-[#0F58FF] bg-[#EEF3FF] shadow-lg shadow-[#0F58FF]/20'
-                        : 'border border-[#E9EEFF] bg-white hover:border-[#0F58FF]/30 hover:shadow-md'
-                    } h-[150px]`}
-                  >
-                    <div>
-                      <p className={`text-sm font-semibold ${active ? 'text-[#0F58FF]' : 'text-gray-900'}`}>
-                        {option.title}
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-gray-500">{option.subtitle}</p>
-                    </div>
-                    <div className="flex justify-end">
-                      <Image
-                        src={option.image}
-                        alt={option.title}
-                        className="h-20 w-auto object-contain"
-                      />
-                    </div>
-                  </button>
-                );
-              })}
+              {/* Small Shipment - Row 1, Col 1 */}
+              <button
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, packageSize: 'SMALL' as any }));
+                }}
+                className={`group flex flex-col justify-between overflow-hidden rounded-[26px] border border-[#E9EEFF] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md h-[150px] ${
+                  formData.packageSize === 'SMALL' ? 'border-2 border-[#0F58FF] bg-[#EEF3FF]' : ''
+                }`}
+              >
+                <div className={formData.packageSize === 'SMALL' ? 'z-10' : ''}>
+                  <p className={`text-sm font-semibold ${formData.packageSize === 'SMALL' ? 'text-[#0F58FF]' : 'text-gray-900'}`}>
+                    Small Shipment
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">2 Boxes</p>
+                </div>
+                <div className="flex justify-end items-end -mt-4 -mr-10">
+                  <Image
+                    src={parcelIcon1}
+                    alt="Small Shipment"
+                    className="h-36 w-40 object-contain rounded-xl"
+                  />
+                </div>
+              </button>
+
+              {/* Large Shipment - Row 1-2, Col 2 (spans 2 rows) */}
+              <button
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, packageSize: 'LARGE' as any }));
+                }}
+                className={`group flex flex-col justify-between overflow-hidden rounded-[26px] border border-[#E9EEFF] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md row-span-2 h-full ${
+                  formData.packageSize === 'LARGE' ? 'border-2 border-[#0F58FF] bg-[#EEF3FF]' : ''
+                }`}
+              >
+                <div>
+                  <p className={`text-sm font-semibold ${formData.packageSize === 'LARGE' ? 'text-[#0F58FF]' : 'text-gray-900'}`}>
+                    Large Shipment
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">&gt;10 Boxes</p>
+                </div>
+                <div className="flex justify-end items-end flex-1 -mb-20 -mr-20">
+                  <Image
+                    src={parcelIcon3}
+                    alt="Large Shipment"
+                    className="h-60 w-80 object-contain"
+                  />
+                </div>
+              </button>
+
+              {/* Medium Shipment - Row 2, Col 1 */}
+              <button
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, packageSize: 'MEDIUM' as any }));
+                }}
+                className={`group flex flex-col justify-between overflow-hidden rounded-[26px] border border-[#E9EEFF] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md h-[150px] ${
+                  formData.packageSize === 'MEDIUM' ? 'border-2 border-[#0F58FF] bg-[#EEF3FF]' : ''
+                }`}
+              >
+                <div>
+                  <p className={`text-sm font-semibold ${formData.packageSize === 'MEDIUM' ? 'text-[#0F58FF]' : 'text-gray-900'}`}>
+                    Medium Shipment
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">4 Boxes</p>
+                </div>
+                <div className="flex justify-end items-end -mt-6 -mr-14">
+                  <Image
+                    src={parcelIcon2}
+                    alt="Medium Shipment"
+                    className="h-40 w-40 object-contain"
+                  />
+                </div>
+              </button>
             </div>
             <button
               onClick={() => {
@@ -776,7 +832,7 @@ export default function BookingPage() {
                 }
                 setCurrentStep('priceReview');
               }}
-              className="w-full rounded-full bg-[#0F58FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
+              className="w-full rounded-full bg-[#103EF7] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30"
             >
               Continue
             </button>
@@ -787,53 +843,57 @@ export default function BookingPage() {
       {currentStep === 'priceReview' && (
         <MapSection pickup={formData.pickupAddress} drop={formData.deliveryAddress}>
           <div className="pb-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Confirm</h2>
+            <h2 className="text-sm font-semibold text-gray-900 mb-4">Confirm</h2>
 
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Pickup Point</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {formData.pickupAddress.split(',')[0]}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Charges*</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {priceLoading ? '...' : `£${priceEstimate?.estimatedPrice || priceEstimate?.breakdown?.total || 0}`}
-                  </p>
-                  <button
-                    onClick={() => setShowPriceBreakdown(true)}
-                    className="text-xs text-[#0F58FF] hover:underline mt-1"
-                  >
-                    View Price Breakup
-                  </button>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Top Left - Pickup Point */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Pickup Point</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formData.pickupAddress.split(',')[0]}
+                </p>
               </div>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Package Size</p>
-                  <p className="text-sm font-semibold text-gray-900 capitalize">
-                    {formData.packageSize?.toLowerCase() || 'Medium'}
-                  </p>
-                </div>
+
+              {/* Top Right - Package Size */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Package Size</p>
+                <p className="text-sm font-semibold text-gray-900 capitalize">
+                  {formData.packageSize?.toLowerCase() || 'Medium'}
+                </p>
+              </div>
+
+              {/* Bottom Left - Charges */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Charges*</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {priceLoading ? '...' : `£${priceEstimate?.estimatedPrice || priceEstimate?.breakdown?.total || 0}`}
+                </p>
+                <button
+                  onClick={() => setShowPriceBreakdown(true)}
+                  className="text-xs text-[#0F58FF] hover:underline mt-1"
+                >
+                  View Price Breakup
+                </button>
+              </div>
+
+              {/* Bottom Right - Book Now Button */}
+              <div className="flex items-end">
+                <button
+                  onClick={handleBookNow}
+                  disabled={bookingLoading || priceLoading}
+                  className="w-full rounded-xl bg-[#0F58FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#0F58FF]/30 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {bookingLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Booking...
+                    </span>
+                  ) : (
+                    'Book Now'
+                  )}
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={handleBookNow}
-              disabled={bookingLoading || priceLoading}
-              className="w-full rounded-full bg-[#0F58FF] py-4 text-base font-bold text-white shadow-lg shadow-[#0F58FF]/30 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {bookingLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Booking...
-                </span>
-              ) : (
-                'Book Now'
-              )}
-            </button>
           </div>
         </MapSection>
       )}
@@ -865,78 +925,78 @@ export default function BookingPage() {
       )}
 
       {currentStep === 'driverAssigned' && (
-        <div className="flex min-h-screen flex-col bg-gradient-to-b from-[#2563EB] via-[#3B82F6] to-[#60A5FA] text-white">
+        <div className="h-screen max-h-screen w-full overflow-hidden flex flex-col bg-gradient-to-b from-[#003BBF] via-[#3B82F6] to-[#7EA6FF] text-white">
           <div className="px-6 pt-12 text-center">
             <p className="text-[32px] font-bold tracking-wide">sharevan</p>
             <p className="text-xs uppercase tracking-[0.3em] text-white/80 mt-1">Your Logistics Partner</p>
           </div>
 
-          <div className="relative mt-8 flex flex-1 flex-col items-center justify-center">
+          <div className="relative flex-1 flex flex-col items-center justify-center overflow-hidden">
             <Image
               src={loginIllustration}
               alt="Driver"
               priority
-              className="w-[478px] max-w-none drop-shadow-[0_25px_35px_rgba(0,0,0,0.25)] mx-auto"
+              className="w-[478px] max-w-none drop-shadow-[0_25px_35px_rgba(0,0,0,0.25)] "
             />
 
-            <div className="absolute bottom-0 w-full px-5 pb-8">
-              <div className="mx-auto w-full max-w-[370px] rounded-[32px] bg-white px-6 py-6 text-gray-900 shadow-[0_25px_55px_rgba(15,88,255,0.35)]">
-                <h2 className="text-center text-base font-bold text-gray-900 mb-5">
-                  Your Driver is Arriving in {orderSummary?.eta || '10 Minutes'}
-                </h2>
+            <div className="absolute bottom-0 w-full rounded-t-3xl bg-white px-6 pt-6 pb-8 shadow-[0_-18px_40px_rgba(15,88,255,0.25)]">
+              <h2 className="text-base font-bold text-gray-900 mb-5 text-center">
+                Your Driver is Arriving in {orderSummary?.eta || '10 Minutes'}
+              </h2>
 
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 overflow-hidden">
-                    {orderSummary?.driver?.profileImage ? (
-                      <img
-                        src={orderSummary.driver.profileImage}
-                        alt={orderSummary.driver.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xl font-bold text-gray-600">
-                        {orderSummary?.driver?.name?.charAt(0) || 'D'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-base font-bold text-gray-900">
-                      {orderSummary?.driver?.name || 'Albert Johnson'}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      {orderSummary?.driver?.vehicleType || 'Ford Pickup'}
-                    </p>
-                  </div>
-                  <a
-                    href={orderSummary?.driver?.mobile ? `tel:${orderSummary.driver.mobile}` : 'tel:'}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white border-2 border-gray-200 hover:border-[#0F58FF] transition-colors"
-                  >
-                    <Phone className="h-5 w-5 text-gray-700" />
-                  </a>
+              <div className="flex items-center gap-4 mb-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 overflow-hidden">
+                  {orderSummary?.driver?.profileImage ? (
+                    <img
+                      src={orderSummary.driver.profileImage}
+                      alt={orderSummary.driver.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl font-bold text-gray-600">
+                      {orderSummary?.driver?.name?.charAt(0) || 'D'}
+                    </span>
+                  )}
                 </div>
+                <div className="flex-1">
+                  <p className="text-base font-bold text-gray-900">
+                    {orderSummary?.driver?.name || 'Albert Johnson'}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {orderSummary?.driver?.vehicleType || 'Ford Pickup'}
+                  </p>
+                </div>
+                <a
+                  href={orderSummary?.driver?.mobile ? `tel:${orderSummary.driver.mobile}` : 'tel:'}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white border-2 border-gray-200 hover:border-[#0F58FF] transition-colors"
+                >
+                  <Phone className="h-5 w-5 text-gray-700" />
+                </a>
+              </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="rounded-2xl bg-[#F0F4FF] px-4 py-3">
+              <div className="rounded-2xl bg-[#F0F4FF] px-4 py-3 mb-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <p className="text-xs font-semibold text-gray-500 mb-1">Vehicle Number</p>
                     <p className="text-sm font-bold text-gray-900">
                       {orderSummary?.driver?.vehicleNumber || 'UK 23 JG245'}
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-[#F0F4FF] px-4 py-3">
+                  <div>
                     <p className="text-xs font-semibold text-gray-500 mb-1">OTP</p>
                     <p className="text-sm font-bold text-gray-900">
                       {orderSummary?.pickupOtp || '3566'}
                     </p>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => router.push('/user/dashboard')}
-                  className="w-full rounded-full border-2 border-[#0F58FF] bg-white py-3.5 text-sm font-bold text-[#0F58FF] hover:bg-[#0F58FF] hover:text-white transition-colors"
-                >
-                  Back to Home
-                </button>
               </div>
+
+              <button
+                onClick={() => router.push('/user/dashboard')}
+                className="w-full rounded-full border-2 border-[#0F58FF] bg-white py-3.5 text-sm font-bold text-[#0F58FF] hover:bg-[#0F58FF] hover:text-white transition-colors"
+              >
+                Back to Home
+              </button>
             </div>
           </div>
         </div>
@@ -1025,9 +1085,9 @@ function DriverSearchMapSection({
     const fallbackTimer = setTimeout(() => {
       if (nearbyDrivers.length === 0) {
         const mockDrivers = [
-          { id: 1, lat: pickupLat + 0.01, lng: pickupLng + 0.01, vehicleType: 'CAR', name: 'Driver 1' },
-          { id: 2, lat: pickupLat - 0.015, lng: pickupLng + 0.02, vehicleType: 'VAN', name: 'Driver 2' },
-          { id: 3, lat: pickupLat + 0.02, lng: pickupLng - 0.01, vehicleType: 'BIKE', name: 'Driver 3' },
+          { id: 1, lat: pickupLat + 0.002, lng: pickupLng + 0.002, vehicleType: 'CAR', name: 'Driver 1' },
+          { id: 2, lat: pickupLat - 0.003, lng: pickupLng + 0.0025, vehicleType: 'VAN', name: 'Driver 2' },
+          { id: 3, lat: pickupLat + 0.0025, lng: pickupLng - 0.002, vehicleType: 'BIKE', name: 'Driver 3' },
         ];
         setNearbyDrivers(mockDrivers);
       }
@@ -1066,7 +1126,7 @@ function DriverSearchMapSection({
     const center = { lat: pickupLat, lng: pickupLng };
     const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
       center,
-      zoom: 14,
+      zoom: 16,
       disableDefaultUI: true,
       zoomControl: false,
       styles: [
@@ -1139,20 +1199,17 @@ function DriverSearchMapSection({
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
 
-    // Add new driver markers with vehicle icons
+    // Add new driver markers with car icon
+    const iconUrl = typeof carIconForMap === 'string' ? carIconForMap : carIconForMap.src;
     nearbyDrivers.forEach(driver => {
-      const vehicleType = (driver.vehicleType || driver.type || 'CAR').toUpperCase();
-      const vehicleEmoji = vehicleType === 'CAR' ? '🚗' :
-                          vehicleType === 'VAN' ? '🚐' :
-                          vehicleType === 'BIKE' || vehicleType === 'MOTORCYCLE' ? '🏍️' : '🚚';
-
       const marker = new window.google.maps.Marker({
         position: { lat: driver.lat || driver.latitude, lng: driver.lng || driver.longitude },
         map: mapInstanceRef.current,
         title: driver.name || `Driver ${driver.id}`,
-        label: {
-          text: vehicleEmoji,
-          fontSize: '28px',
+        icon: {
+          url: iconUrl,
+          scaledSize: new window.google.maps.Size(100, 100),
+          anchor: new window.google.maps.Point(20, 20),
         },
         animation: window.google.maps.Animation.DROP,
       });
@@ -1172,7 +1229,11 @@ function DriverSearchMapSection({
 
       <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white px-6 pt-5 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
         <div className="flex items-center justify-center mb-4">
-          <div className="text-5xl animate-bounce">🚚</div>
+          <Image
+            src={driverTruckIcon}
+            alt="Delivery Truck"
+            className="w-24 h-24 object-contain "
+          />
         </div>
         <h2 className="text-center text-base font-bold text-gray-900 mb-2">
           We are looking for Drivers Near You
@@ -1215,8 +1276,10 @@ function MapSection({
         loading="lazy"
         allowFullScreen
       />
-      <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white px-5 pt-4 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
-        {children}
+      <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white shadow-[0_-16px_35px_rgba(15,88,255,0.12)] max-h-[85vh] flex flex-col">
+        <div className="overflow-y-auto px-5 pt-4 pb-6">
+          {children}
+        </div>
       </div>
     </div>
   );

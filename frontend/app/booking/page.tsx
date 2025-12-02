@@ -814,7 +814,7 @@ export default function BookingPage() {
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Charges*</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {priceLoading ? '...' : `£${priceEstimate?.total || 0}`}
+                    {priceLoading ? '...' : `£${priceEstimate?.estimatedPrice || priceEstimate?.breakdown?.total || 0}`}
                   </p>
                   <button
                     onClick={() => setShowPriceBreakdown(true)}
@@ -1229,8 +1229,10 @@ function MapSection({
         loading="lazy"
         allowFullScreen
       />
-      <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white px-5 pt-4 pb-6 shadow-[0_-16px_35px_rgba(15,88,255,0.12)]">
-        {children}
+      <div className="absolute bottom-0 left-0 right-0 z-20 rounded-t-[32px] bg-white shadow-[0_-16px_35px_rgba(15,88,255,0.12)] max-h-[85vh] flex flex-col">
+        <div className="overflow-y-auto px-5 pt-4 pb-6">
+          {children}
+        </div>
       </div>
     </div>
   );

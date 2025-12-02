@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Package, Clock, History, HelpCircle, User as UserIcon, ArrowRight } from 'lucide-react'
+import { Package, ArrowRight, MapPinIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/authStore'
 import { userAPI } from '@/lib/api'
@@ -15,6 +15,11 @@ import dashboardHero from '@icons/user-dashboard-top.png'
 import parcelIcon1 from '@icons/parcel-select-icon-1.jpg'
 import parcelIcon2 from '@icons/parcel-select-icon-2.jpg'
 import parcelIcon3 from '@icons/parcel-select-icon-3.jpg'
+import parcelIcon4 from '@icons/truck-coming.png'
+import trackIcon from '@icons/track-icon.svg'
+import historyIcon from '@icons/history-icon.svg'
+import helpIcon from '@icons/help-icon.svg'
+import userIcon from '@icons/User-icon.svg'
 
 export default function UserDashboard() {
   const router = useRouter()
@@ -22,7 +27,7 @@ export default function UserDashboard() {
   const [dashboard, setDashboard] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentLocation, setCurrentLocation] = useState<string>('Oxford, United Kingdom')
-  const [driverEtas, setDriverEtas] = useState<{[key: string]: {minutes: number, text: string}}>({})
+  const [driverEtas, setDriverEtas] = useState<{ [key: string]: { minutes: number, text: string } }>({})
 
   useEffect(() => {
     if (!hasHydrated) return
@@ -112,7 +117,7 @@ export default function UserDashboard() {
       directionsService.route(request, (result: any, status: any) => {
         if (status === google.maps.DirectionsStatus.OK && result.routes[0]) {
           const durationInSeconds = result.routes[0].legs[0].duration_in_traffic?.value ||
-                                    result.routes[0].legs[0].duration.value
+            result.routes[0].legs[0].duration.value
           const minutes = Math.ceil(durationInSeconds / 60)
 
           setDriverEtas(prev => ({
@@ -157,7 +162,7 @@ export default function UserDashboard() {
   const getLocationFromCoordinates = async (latitude: number, longitude: number) => {
     try {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
-                    'AIzaSyAg1QBIXXbGLiNO26G6GvHQwmdJJ0usUV0'
+        'AIzaSyAg1QBIXXbGLiNO26G6GvHQwmdJJ0usUV0'
 
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
@@ -254,11 +259,12 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen w-full bg-[#EEF2FF] overflow-hidden">
       {/* Full-width Blue Banner */}
-      <div className="relative w-full bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] pt-6 overflow-hidden">
+      <div className="relative w-full bg-gradient-to-br from-[#203899] via-[#2C7BFF] to-[#365EFF] pt-6 overflow-hidden">
         <div className="mx-auto w-full max-w-[430px] px-5 relative">
           <div className="flex justify-center">
             <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs font-semibold text-white">
-              <span className="inline-flex h-2 w-2 rounded-full bg-white" />
+              {/* <span className="inline-flex h-2 w-2 rounded-full bg-white" /> */}
+              <MapPinIcon className="h-4 w-4" />
               {locationLabel}
             </div>
           </div>
@@ -312,24 +318,22 @@ export default function UserDashboard() {
                   <button
                     key={order.id}
                     onClick={() => router.push(`/user/orders/${order.id}`)}
-                    className="w-full rounded-[28px] bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] p-5 text-left text-white shadow-lg transition hover:shadow-xl"
+                    className="relative w-full rounded-[28px] bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] p-5 text-left text-white shadow-lg transition hover:shadow-xl overflow-hidden"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white/90 mb-1">
-                          #{order.orderNumber}
-                        </p>
-                        <p className="text-base font-semibold">
-                          {order.pickupAddress?.split(',')[0] || 'Pickup'} → {order.deliveryAddress?.split(',')[0] || 'Delivery'}
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <Image
-                          src={parcelIcon3}
-                          alt="Delivery Truck"
-                          className="h-16 w-auto object-contain opacity-90"
-                        />
-                      </div>
+                    <div className="relative z-10 pr-32">
+                      <p className="text-base font-semibold text-white mb-1">
+                        Your Driver is Arriving in {driverEtas[order.id]?.text || '10 Minutes'}
+                      </p>
+                      <p className="text-sm font-medium text-white/90">
+                        {order.pickupAddress?.split(',')[0] || 'Pickup'} → {order.deliveryAddress?.split(',')[0] || 'Delivery'}
+                      </p>
+                    </div>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4">
+                      <Image
+                        src={parcelIcon4}
+                        alt="Delivery Truck"
+                        className="h-32 w-auto object-contain opacity-90"
+                      />
                     </div>
                   </button>
                 ))}
@@ -338,7 +342,7 @@ export default function UserDashboard() {
           )}
 
           {/* Shipment Categories */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             {[
               {
                 title: 'Small Shipment',
@@ -358,13 +362,13 @@ export default function UserDashboard() {
                 image: parcelIcon2,
                 className: 'h-[150px]',
               },
-              {
-                title: 'van ai',
-                subtitle: 'Use AI to Determine your Package Size',
-                image: null,
-                className: 'h-[150px]',
-                isAI: true,
-              },
+              // {
+              //   title: 'van ai',
+              //   subtitle: 'Use AI to Determine your Package Size',
+              //   image: null,
+              //   className: 'h-[150px]',
+              //   isAI: true,
+              // },
             ].map((item) => (
               <button
                 key={item.title}
@@ -388,18 +392,72 @@ export default function UserDashboard() {
                 )}
               </button>
             ))}
-          </div>
+          </div> */}
+          {/* Shipment Categories */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Small Shipment - Row 1, Col 1 */}
+            <button
+              onClick={() => router.push('/user/booking')}
+              className="group flex flex-col justify-between overflow-hidden rounded-[26px] border border-[#E9EEFF] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md h-[150px]"
+            >
+              <div className='z-10'>
+                <p className="text-sm font-semibold text-gray-900">Small Shipment</p>
+                <p className="mt-1 text-xs font-medium text-gray-500">2 Boxes</p>
+              </div>
+              <div className="flex justify-end items-end -mt-4 -mr-10">
+                <Image
+                  src={parcelIcon1}
+                  alt="Small Shipment"
+                  className="h-38 w-40 object-contain rounded-xl"
+                />
+              </div>
+            </button>
 
+            {/* Large Shipment - Row 1-2, Col 2 (spans 2 rows) */}
+            <button
+              onClick={() => router.push('/user/booking')}
+              className="group flex flex-col justify-between overflow-hidden rounded-[26px] border border-[#E9EEFF] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md row-span-2 h-full"
+            >
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Large Shipment</p>
+                <p className="mt-1 text-xs font-medium text-gray-500">&gt;10 Boxes</p>
+              </div>
+              <div className="flex justify-end items-end flex-1 -mb-20 -mr-20">
+                <Image
+                  src={parcelIcon3}
+                  alt="Large Shipment"
+                  className="h-60 w-80 object-contain"
+                />
+              </div>
+            </button>
+
+            {/* Medium Shipment - Row 2, Col 1 */}
+            <button
+              onClick={() => router.push('/user/booking')}
+              className="group flex flex-col justify-between overflow-hidden rounded-[26px] border border-[#E9EEFF] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md h-[150px]"
+            >
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Medium Shipment</p>
+                <p className="mt-1 text-xs font-medium text-gray-500">4 Boxes</p>
+              </div>
+              <div className="flex justify-end items-end  -mt-12 -mr-14">
+                <Image
+                  src={parcelIcon2}
+                  alt="Medium Shipment"
+                  className="h-40 w-40 object-contain"
+                />
+              </div>
+            </button>
+          </div>
           {/* Driver Promo */}
-          <div className="overflow-hidden rounded-[30px] bg-gradient-to-br from-[#0F58FF] to-[#1544CE] p-6 text-white shadow-lg">
+          <div className="overflow-hidden rounded-[25px] bg-gradient-to-br from-[#365EFF] to-[#203899] p-6 text-white shadow-lg">
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-[0.35em] text-white/60">
-                Earn with Share Van
-              </p>
+
               <h2 className="text-lg font-semibold leading-snug">
                 Join Share Van Driver Fleet and Earn Upto{' '}
                 <span className="text-yellow-300">
-                  €{Math.max(234, Math.round(totalOrders * 12 + 234))}/ Month
+                  {/* €{Math.max(234, Math.round(totalOrders * 12 + 234))}/ Month */}
+                  £245/ Month
                 </span>
               </h2>
             </div>
@@ -418,33 +476,35 @@ export default function UserDashboard() {
               {[
                 {
                   title: 'Track',
-                  icon: Package,
+                  iconSrc: trackIcon,
                   action: () => router.push('/user/orders'),
                 },
                 {
                   title: 'History',
-                  icon: History,
+                  iconSrc: historyIcon,
                   action: () => router.push('/user/orders'),
                 },
                 {
                   title: 'Help',
-                  icon: HelpCircle,
+                  iconSrc: helpIcon,
                   action: () => toast.info('Support is coming soon!'),
                 },
                 {
                   title: 'Profile',
-                  icon: UserIcon,
+                  iconSrc: userIcon,
                   action: () => router.push('/user/profile'),
                 },
-              ].map(({ title, icon: Icon, action }) => (
+              ].map(({ title, iconSrc, action }) => (
                 <button
                   key={title}
                   onClick={action}
-                  className="flex flex-col items-center gap-2 rounded-[22px] border border-transparent bg-white px-3 py-4 text-sm font-medium text-gray-600 shadow-sm transition hover:-translate-y-1 hover:border-[#0F58FF]/40 hover:text-[#0F58FF] hover:shadow-md"
+                  className="flex flex-col items-center gap-2 rounded-[12px] bg-[#FBFBFB] border border-[#F2F2F2] px-3 py-4 text-sm font-medium text-black shadow-sm transition hover:shadow-md"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF3FF] text-[#0F58FF]">
-                    <Icon className="h-5 w-5" />
-                  </span>
+                  <Image
+                    src={iconSrc}
+                    alt={title}
+                    className="h-6 w-6"
+                  />
                   {title}
                 </button>
               ))}
@@ -452,7 +512,7 @@ export default function UserDashboard() {
           </div>
 
           {/* Recent Orders */}
-          <div className="pb-6">
+          {/* <div className="pb-6">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-semibold text-gray-900">Recent Orders</h3>
               {dashboard?.recentOrders?.length > 0 && (
@@ -514,7 +574,7 @@ export default function UserDashboard() {
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

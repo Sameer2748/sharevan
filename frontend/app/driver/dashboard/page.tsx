@@ -5,10 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { driverAPI } from '@/lib/api'
 import { toast } from 'sonner'
-import { MapPin, Menu, Bell, User, History, HelpCircle, Loader2 } from 'lucide-react'
+import { MapPin, Menu, Bell, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import dashboardHero from '@icons/user-dashboard-top.png'
 import driverTruckIcon from '@icons/driver-dashboard.png'
+import trackIcon from '@icons/track-icon.svg'
+import historyIcon from '@icons/history-icon.svg'
+import helpIcon from '@icons/help-icon.svg'
+import userIcon from '@icons/User-icon.svg'
 import { initSocket, getSocket, onNewOrderAlert, onOrderTaken, onOrderCancelled, offEvent } from '@/lib/socket'
 
 export default function DriverDashboard() {
@@ -378,7 +382,7 @@ export default function DriverDashboard() {
   return (
     <div className="min-h-screen w-full bg-[#EEF2FF] overflow-hidden">
       {/* Full-width Blue Banner */}
-      <div className="relative w-full bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] pt-6 overflow-hidden">
+      <div className="relative w-full bg-gradient-to-br from-[#203899] via-[#2C7BFF] to-[#365EFF] pt-6 overflow-hidden">
         <div className="mx-auto w-full max-w-[430px] px-5 relative">
           {/* Location Badge */}
           <div className="flex justify-center">
@@ -431,13 +435,13 @@ export default function DriverDashboard() {
                 className="flex flex-col items-center gap-2"
               >
                 <div className="w-14 h-14 rounded-full bg-[#F5F7FF] flex items-center justify-center hover:bg-[#E8EDFF] transition">
-                  <History className="w-6 h-6 text-[#0F58FF]" />
+                  <Image src={historyIcon} alt="History" width={24} height={24} />
                 </div>
                 <span className="text-xs text-gray-600 font-medium">History</span>
               </button>
               <button className="flex flex-col items-center gap-2">
                 <div className="w-14 h-14 rounded-full bg-[#F5F7FF] flex items-center justify-center hover:bg-[#E8EDFF] transition">
-                  <HelpCircle className="w-6 h-6 text-[#0F58FF]" />
+                  <Image src={helpIcon} alt="Help" width={24} height={24} />
                 </div>
                 <span className="text-xs text-gray-600 font-medium">Help</span>
               </button>
@@ -446,7 +450,7 @@ export default function DriverDashboard() {
                 className="flex flex-col items-center gap-2"
               >
                 <div className="w-14 h-14 rounded-full bg-[#F5F7FF] flex items-center justify-center hover:bg-[#E8EDFF] transition">
-                  <User className="w-6 h-6 text-[#0F58FF]" />
+                  <Image src={userIcon} alt="Profile" width={24} height={24} />
                 </div>
                 <span className="text-xs text-gray-600 font-medium">Profile</span>
               </button>
@@ -455,55 +459,55 @@ export default function DriverDashboard() {
 
           {/* Active Rides */}
           <div>
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Active Rides</h3>
-            {activeOrder ? (
-              <button
-                onClick={() => router.push(`/driver/ride/${activeOrder.id}`)}
-                className="w-full bg-white rounded-[24px] border border-gray-200 p-5 text-left shadow-sm transition hover:shadow-md"
-              >
-                {/* Order ID Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">ID: {activeOrder.orderNumber}</p>
-                    <p className="text-base font-bold text-gray-900">
-                      {activeOrder.pickupAddress?.split(',')[0] || 'Pickup'} → {activeOrder.deliveryAddress?.split(',')[0] || 'Delivery'}
-                    </p>
-                  </div>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+  <h3 className="text-base font-semibold text-gray-900 mb-3">Active Rides</h3>
+  {activeOrder ? (
+    <button
+      onClick={() => router.push(`/driver/ride/${activeOrder.id}`)}
+      className="w-full bg-white rounded-[24px] border border-gray-200 overflow-hidden text-left shadow-sm transition hover:shadow-md"
+    >
+      {/* Order ID Header */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-4">
+        <div>
+          <p className="text-xs text-gray-500 mb-0.5">ID: {activeOrder.orderNumber}</p>
+          <p className="text-base font-bold text-gray-900">
+            {activeOrder.pickupAddress?.split(',')[0] || 'Pickup'} → {activeOrder.deliveryAddress?.split(',')[0] || 'Delivery'}
+          </p>
+        </div>
+        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
 
-                {/* Urgent Delivery Badge */}
-                {activeOrder.bookingType === 'URGENT' && (
-                  <div className="flex items-center justify-between mb-4 bg-red-50 rounded-xl px-4 py-2.5">
-                    <span className="text-sm font-semibold text-red-600">Urgent Delivery</span>
-                    <span className="text-sm font-medium text-red-600">
-                      Drop by {(() => {
-                        const estimatedDuration = activeOrder.estimatedDuration || 30; // minutes from Google Maps
-                        const dropTime = new Date(Date.now() + estimatedDuration * 60000);
-                        return dropTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                      })()}
-                    </span>
-                  </div>
-                )}
-              </button>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 rounded-[24px] bg-[#F5F7FF]">
-                <Image
-                  src={driverTruckIcon}
-                  alt="No active rides"
-                  width={100}
-                  height={100}
-                  className="opacity-40 mb-3"
-                />
-                <p className="text-gray-500 font-medium text-sm">You Have No Active Rides</p>
-              </div>
-            )}
-          </div>
+      {/* Urgent Delivery Badge - Full Width at Bottom */}
+      {activeOrder.bookingType === 'URGENT' && (
+        <div className="flex items-center justify-between bg-red-50 px-5 py-3">
+          <span className="text-sm font-semibold text-red-600">Urgent Delivery</span>
+          <span className="text-sm font-semibold text-red-600">
+            Drop by {(() => {
+              const estimatedDuration = activeOrder.estimatedDuration || 30;
+              const dropTime = new Date(Date.now() + estimatedDuration * 60000);
+              return dropTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            })()}
+          </span>
+        </div>
+      )}
+    </button>
+  ) : (
+    <div className="flex flex-col items-center justify-center py-12 rounded-[24px] bg-[#F5F7FF]">
+      <Image
+        src={driverTruckIcon}
+        alt="No active rides"
+        width={100}
+        height={100}
+        className="opacity-40 mb-3"
+      />
+      <p className="text-gray-500 font-medium text-sm">You Have No Active Rides</p>
+    </div>
+  )}
+</div>
 
           {/* Referral Card */}
-          <div className="bg-gradient-to-br from-[#0F58FF] via-[#2C7BFF] to-[#62B3FF] rounded-[24px] p-6 text-white shadow-lg">
+          <div className="bg-gradient-to-br from-[#365EFF] to-[#203899] rounded-[24px] p-6 text-white shadow-lg">
             <p className="text-white/90 text-sm mb-2">Refer Your Friends and Earn Upto</p>
             <p className="text-3xl font-bold mb-4">£245</p>
             <button className="bg-white text-[#0F58FF] px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-white/90 transition shadow-md">
