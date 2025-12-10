@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
 import ClientErrorSuppressor from '@/components/ClientErrorSuppressor'
+import FontLoader from '@/components/FontLoader'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <FontLoader />
         <ClientErrorSuppressor />
         {children}
         <Toaster position="top-center" richColors />

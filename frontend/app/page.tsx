@@ -726,7 +726,7 @@ export default function HomePage() {
             {/* Logo Column - Hidden on small, shows on md+ */}
             <div className="hidden md:block md:row-span-2">
               <h3 style={{
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Chillax, sans-serif',
                     fontWeight: 500,
 
                   }} className="text-[#103EF7] font-bold text-2xl">sharevan</h3>
