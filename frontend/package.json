@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+"build": "mkdir -p public/icons && cp -r ../icons/* public/icons/ && next build",
     "start": "next start",
     "lint": "next lint"
   },

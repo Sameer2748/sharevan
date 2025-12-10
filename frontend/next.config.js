@@ -10,18 +10,13 @@ const nextConfig = {
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
   },
   webpack: (config) => {
-    config.resolve.alias['@icons'] = path.resolve(__dirname, '../icons')
+    // Now points to copied icons inside public/
+    config.resolve.alias['@icons'] = path.resolve(__dirname, 'public/icons')
     return config
   },
-  // Suppress known React DOM errors from Google Maps
   reactStrictMode: false,
-  // Skip linting and type checking during build
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
 }
 
 module.exports = nextConfig
