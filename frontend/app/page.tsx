@@ -62,7 +62,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
-              <div className="bg-white/10 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
+              <div className=" px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
                 <span className="text-white font-semibold text-base sm:text-lg">sharevan</span>
               </div>
             </div>
