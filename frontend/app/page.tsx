@@ -505,26 +505,7 @@ export default function HomePage() {
               <h3 className="text-[#103EF7] font-bold text-2xl">sharevan</h3>
             </div>
 
-            {/* Row 1, Col 1 - SELL A HOME */}
-            <div>
-              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">SELL A HOME</h4>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Request an offer</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Pricing</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Reviews</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Stories</Link></li>
-              </ul>
-            </div>
 
-            {/* Row 1, Col 2 - BUY, RENT AND SELL */}
-            <div>
-              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">BUY, RENT AND SELL</h4>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy and sell properties</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Rent home</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Builder trade-up</Link></li>
-              </ul>
-            </div>
 
             {/* Row 1, Col 3 (lg only) - ABOUT */}
             <div className="hidden lg:block">
@@ -548,14 +529,7 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Row 2, Col 2 - BUY A HOME */}
-            <div>
-              <h4 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">BUY A HOME</h4>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Buy</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Finance</Link></li>
-              </ul>
-            </div>
+           
 
             {/* Row 2, Col 3 (md+) - TERMS & PRIVACY */}
             <div className="hidden md:block">
