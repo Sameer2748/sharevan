@@ -119,11 +119,11 @@ export default function Sidebar() {
                       <path d="M11.875 11.875H16.875V16.875H11.875V11.875Z" stroke="currentColor" strokeWidth="1.5" />
                     </svg>
                   ) : item.path === '/dashboard/customers' ? (
-                    <Image src="/icons/users.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
+                    <Image src="/icons/Users.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
                   ) : item.path === '/dashboard/drivers' ? (
-                    <Image src="/icons/truck.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
+                    <Image src="/icons/Truck.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
                   ) : item.path === '/dashboard/driver-verification' ? (
-                    <Image src="/icons/checkcircle.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
+                    <Image src="/icons/CheckCircle.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
                   ) : item.path === '/dashboard/bookings' ? (
                     <Image src="/icons/Calendar.svg" alt="" width={16} height={16} className={active ? 'brightness-0 invert' : ''} />
                   ) : null}
