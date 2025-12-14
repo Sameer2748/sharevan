@@ -225,7 +225,7 @@ export default function DriversPage() {
                             <td className="px-3 py-2">
                               <div className="flex flex-col gap-0">
                                 <span className="text-xs text-[#364153] leading-tight">{driver.vehicleType}</span>
-                                <span className="text-[10px] text-[#6A7282] leading-tight">{driver.vehicleNumber}</span>
+                                {/* <span className="text-[10px] text-[#6A7282] leading-tight">{driver.vehicleNumber}</span> */}
                               </div>
                             </td>
                             <td className="px-3 py-2">
