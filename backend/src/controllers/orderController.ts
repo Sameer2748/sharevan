@@ -370,10 +370,13 @@ export const getOrderById = async (req: Request, res: Response) => {
           select: { id: true, name: true, mobile: true, profileImage: true }
         },
         driver: {
-          select: { id: true, name: true, mobile: true, vehicleNumber: true, vehicleType: true, rating: true, profileImage: true }
+          select: { id: true, name: true, mobile: true, vehicleNumber: true, vehicleType: true, rating: true, profileImage: true, currentLat: true, currentLng: true }
         },
         statusHistory: {
           orderBy: { timestamp: 'desc' }
+        },
+        review: {
+          select: { id: true, rating: true, comment: true, createdAt: true }
         }
       }
     });
@@ -520,10 +523,94 @@ export const cancelOrder = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Submit a review for a completed order
+ * POST /api/orders/:id/review
+ */
+export const submitReview = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment, isAnonymous } = req.body;
+    const userId = req.user.id;
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return sendError(res, 'Rating must be between 1 and 5 stars', 400);
+    }
+
+    // Get order with driver info
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        driver: true,
+        review: true
+      }
+    });
+
+    if (!order) {
+      return sendError(res, 'Order not found', 404);
+    }
+
+    // Check if user owns this order
+    if (order.userId !== userId) {
+      return sendError(res, 'Unauthorized', 403);
+    }
+
+    // Check if order is delivered
+    if (order.status !== 'DELIVERED') {
+      return sendError(res, 'Can only review completed deliveries', 400);
+    }
+
+    // Check if already reviewed
+    if (order.review) {
+      return sendError(res, 'Order already reviewed', 400);
+    }
+
+    // Check if driver exists
+    if (!order.driverId || !order.driver) {
+      return sendError(res, 'No driver assigned to this order', 400);
+    }
+
+    // Create review
+    const review = await prisma.review.create({
+      data: {
+        orderId: id,
+        driverId: order.driverId,
+        rating: parseInt(rating),
+        comment: comment || null,
+        isAnonymous: isAnonymous || false
+      }
+    });
+
+    // Update driver's rating
+    const allReviews = await prisma.review.findMany({
+      where: { driverId: order.driverId }
+    });
+
+    const totalRatings = allReviews.length;
+    const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / totalRatings;
+
+    await prisma.driver.update({
+      where: { id: order.driverId },
+      data: {
+        rating: avgRating,
+        totalRatings: totalRatings
+      }
+    });
+
+    return sendSuccess(res, review, 'Review submitted successfully');
+
+  } catch (error: any) {
+    console.error('Submit review error:', error);
+    return sendError(res, error.message || 'Failed to submit review', 500);
+  }
+};
+
 export default {
   calculatePriceEstimate,
   createOrder,
   getOrderById,
   getUserOrders,
-  cancelOrder
+  cancelOrder,
+  submitReview
 };

@@ -10,7 +10,8 @@ declare global {
       user?: {
         id: string;
         role: string;
-        mobile: string;
+        mobile?: string;
+        email?: string;
       };
     }
   }
@@ -40,6 +41,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         id: decoded.id,
         role: decoded.role,
         mobile: decoded.mobile,
+        email: decoded.email,
       };
 
       next();

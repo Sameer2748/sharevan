@@ -51,6 +51,10 @@ interface EnvConfig {
   OTP_EXPIRY_MINUTES: number;
   OTP_LENGTH: number;
   MAX_OTP_ATTEMPTS: number;
+
+  // Admin
+  ADMIN_EMAIL: string;
+  ADMIN_PASSWORD: string;
 }
 
 const getEnv = (key: string, defaultValue?: string): string => {
@@ -114,6 +118,10 @@ export const env: EnvConfig = {
   OTP_EXPIRY_MINUTES: getEnvNumber('OTP_EXPIRY_MINUTES', 5),
   OTP_LENGTH: getEnvNumber('OTP_LENGTH', 6),
   MAX_OTP_ATTEMPTS: getEnvNumber('MAX_OTP_ATTEMPTS', 3),
+
+  // Admin (hardcoded credentials)
+  ADMIN_EMAIL: getEnv('ADMIN_EMAIL', 'admin@sharevan.com'),
+  ADMIN_PASSWORD: getEnv('ADMIN_PASSWORD', 'Admin@123'),
 };
 
 export default env;

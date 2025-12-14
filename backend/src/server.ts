@@ -11,6 +11,12 @@ import { initializeSocket } from './socket';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
+import adminAuthRoutes from './routes/adminAuthRoutes';
+import adminDashboardRoutes from './routes/adminDashboardRoutes';
+import adminCustomerRoutes from './routes/adminCustomerRoutes';
+import adminDriverRoutes from './routes/adminDriverRoutes';
+import adminDriverVerificationRoutes from './routes/adminDriverVerificationRoutes';
+import adminBookingRoutes from './routes/adminBookingRoutes';
 import orderRoutes from './routes/orderRoutes';
 import driverRoutes from './routes/driverRoutes';
 import userRoutes from './routes/userRoutes';
@@ -31,8 +37,38 @@ const io = initializeSocket(httpServer);
 // ============================================================================
 
 // CORS configuration - MUST be before other middleware
+const allowedOrigins = env.NODE_ENV === 'development'
+  ? [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      env.FRONTEND_URL
+    ].filter(Boolean)
+  : [env.FRONTEND_URL].filter(Boolean);
+
 app.use(cors({
-  origin: true, // Allow all origins in development (can restrict to env.FRONTEND_URL in production)
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    
+    // In development, allow any localhost origin
+    if (env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      callback(null, true);
+      return;
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -175,6 +211,12 @@ app.get('/api/stats', async (req: Request, res: Response) => {
 // ============================================================================
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/auth', adminAuthRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/admin/customers', adminCustomerRoutes);
+app.use('/api/admin/drivers', adminDriverRoutes);
+app.use('/api/admin/driver-verifications', adminDriverVerificationRoutes);
+app.use('/api/admin/bookings', adminBookingRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/driver', driverRoutes);
 app.use('/api/user', userRoutes);

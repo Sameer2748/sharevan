@@ -39,4 +39,11 @@ router.get('/:id', authenticateToken, orderController.getOrderById);
  */
 router.put('/:id/cancel', authenticateToken, orderController.cancelOrder);
 
+/**
+ * @route   POST /api/orders/:id/review
+ * @desc    Submit review for completed order
+ * @access  Private (USER)
+ */
+router.post('/:id/review', authenticateToken, orderController.submitReview);
+
 export default router;

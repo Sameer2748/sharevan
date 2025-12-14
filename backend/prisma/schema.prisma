@@ -67,12 +67,17 @@ model User {
   id                  String   @id @default(cuid())
   email               String   @unique  // PRIMARY IDENTIFIER
   mobile              String?  @unique  // OPTIONAL (collected in onboarding)
+  password            String?  // Optional, used for admin login
   name                String?
   profileImage        String?
   dateOfBirth         DateTime?
   role                UserRole @default(USER)
   isVerified          Boolean  @default(false)
   onboardingCompleted Boolean  @default(false)
+  isSuspended         Boolean  @default(false)  // Admin can suspend users
+  note                String?  // Admin notes about user
+  promoCode           String?  // Promo code assigned to user
+  promoCodeAssignedAt DateTime? // When promo code was assigned
 
   // Timestamps
   createdAt     DateTime @default(now())
@@ -120,7 +125,7 @@ model Driver {
   // Driver Status & Performance
   status          DriverStatus @default(PENDING_VERIFICATION)
   isOnline        Boolean      @default(false)
-  rating          Float        @default(0)
+  rating          Float        @default(5.0)
   totalRatings    Int          @default(0)
   totalEarnings   Float        @default(0)
   totalOrders     Int          @default(0)

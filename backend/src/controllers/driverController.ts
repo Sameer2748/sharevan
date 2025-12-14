@@ -86,12 +86,12 @@ export const completeOnboarding = async (req: Request, res: Response) => {
         aadharImage: aadharImageUrl || undefined,
         vehicleRegImage: vehicleRegImageUrl || undefined,
         onboardingCompleted: true,
-        status: 'VERIFIED', // Auto-verified for now
-        verifiedAt: new Date(),
+        // Keep status as PENDING_VERIFICATION - admin will verify
+        status: 'PENDING_VERIFICATION',
       },
     });
 
-    return sendSuccess(res, { driver }, 'Onboarding completed successfully');
+    return sendSuccess(res, { driver }, 'Onboarding completed successfully. Your application is pending admin verification. You will be notified once verified.');
   } catch (error: any) {
     console.error('Complete onboarding error:', error);
     return sendError(res, error.message || 'Failed to complete onboarding', 500);

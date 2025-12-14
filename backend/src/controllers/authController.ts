@@ -171,10 +171,12 @@ export const sendEmailOTP = async (req: Request, res: Response) => {
       let driver = await prisma.driver.findUnique({ where: { email: normalizedEmail } });
       if (!driver) {
         // Auto-create driver on first login (vehicle info collected during onboarding)
+        // Status will default to PENDING_VERIFICATION from schema
         driver = await prisma.driver.create({
           data: {
             email: normalizedEmail,
             onboardingCompleted: false,
+            status: 'PENDING_VERIFICATION',
           }
         });
       }
