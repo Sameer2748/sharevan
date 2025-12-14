@@ -329,7 +329,7 @@ export default function DriversPage() {
                 <div className="flex flex-col gap-0.5 shrink-0">
                   <p className="text-[10px] text-[#6A7282] uppercase">Vehicle</p>
                   <p className="text-xs text-[#101828] leading-tight">{selectedDriver.vehicleType}</p>
-                  {selectedDriver.vehicleNumber && (
+                  {/* {selectedDriver.vehicleNumber && (
                     <p className="text-[10px] text-[#6A7282] leading-tight">#{selectedDriver.vehicleNumber}</p>
                   )}
                   {(selectedDriver.vehicleModel || selectedDriver.vehicleColor) && (
@@ -338,7 +338,7 @@ export default function DriversPage() {
                         ? `${selectedDriver.vehicleModel} • ${selectedDriver.vehicleColor}`
                         : selectedDriver.vehicleModel || selectedDriver.vehicleColor}
                     </p>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Join Date */}
@@ -462,4 +462,3 @@ export default function DriversPage() {
     </div>
   )
 }
-
