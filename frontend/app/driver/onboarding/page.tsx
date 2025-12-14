@@ -20,6 +20,7 @@ export default function DriverOnboardingPage() {
     countryCode: '+44',
     mobile: '',
     email: user?.email || '',
+    vehicleType: '', // BIKE, SCOOTER, CAR, VAN, TRUCK
     licenseNumber: '',
     residentNumber: '', // Aadhar or other ID
   })
@@ -106,6 +107,11 @@ export default function DriverOnboardingPage() {
   }
 
   const validateStep2 = () => {
+    if (!formData.vehicleType) {
+      toast.error('Please select a vehicle type')
+      return false
+    }
+
     if (!formData.licenseNumber.trim()) {
       toast.error('Please enter license number')
       return false
@@ -163,6 +169,7 @@ export default function DriverOnboardingPage() {
       data.append('dateOfBirth', isoDate)
       data.append('mobile', `${formData.countryCode}${formData.mobile}`)
       data.append('email', formData.email.trim())
+      data.append('vehicleType', formData.vehicleType)
       data.append('licenseNumber', formData.licenseNumber.trim().toUpperCase())
       data.append('aadharNumber', formData.residentNumber.trim())
 
@@ -373,6 +380,24 @@ export default function DriverOnboardingPage() {
 
         {currentStep === 2 && (
           <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Vehicle Type
+              </label>
+              <select
+                value={formData.vehicleType}
+                onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-gray-900"
+              >
+                <option value="">Select Vehicle Type</option>
+                <option value="BIKE">Bike</option>
+                <option value="SCOOTER">Scooter</option>
+                <option value="CAR">Car</option>
+                <option value="VAN">Van</option>
+                <option value="TRUCK">Truck</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 License Number
