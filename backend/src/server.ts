@@ -43,6 +43,8 @@ const allowedOrigins = env.NODE_ENV === 'development'
       'http://localhost:3001',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:3001',
+      'https://www.sharevan.app',
+      'https://admin.sharevan.app',
       env.FRONTEND_URL
     ].filter(Boolean)
   : [env.FRONTEND_URL].filter(Boolean);
