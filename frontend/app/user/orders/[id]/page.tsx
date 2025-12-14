@@ -12,6 +12,7 @@ import { onOrderStatusUpdate, trackOrder, untrackOrder, onDriverLocation, initSo
 import { MapPin, Package, User, Phone, Clock, DollarSign, TruckIcon, Star, X, Loader2, Camera, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import ChatModal from '@/components/shared/ChatModal';
+import RatingModal from '@/components/shared/RatingModal';
 
 export default function OrderDetailPage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function OrderDetailPage() {
   const [driverLocation, setDriverLocation] = useState<any>(null);
   const [eta, setEta] = useState<any>(null);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<any>(null);
   const driverMarkerRef = useRef<any>(null);
@@ -78,6 +80,11 @@ export default function OrderDetailPage() {
       const response = await orderAPI.getOrderById(orderId);
       const orderData = response.data.data.order || response.data.data;
       setOrder(orderData);
+
+      // Show rating modal if order is delivered and not reviewed yet
+      if (orderData.status === 'DELIVERED' && !orderData.review) {
+        setTimeout(() => setShowRatingModal(true), 1000); // Show after 1 second
+      }
 
       // Initialize map if driver is assigned and we have coordinates
       if (
@@ -242,6 +249,18 @@ export default function OrderDetailPage() {
       toast.error(error.response?.data?.error || 'Failed to cancel order');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    try {
+      await orderAPI.submitReview(orderId, rating, comment, false);
+      toast.success('Thank you for your feedback!');
+      setShowRatingModal(false);
+      fetchOrder(); // Refresh order to update review status
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to submit review');
+      throw error;
     }
   };
 
@@ -473,6 +492,43 @@ export default function OrderDetailPage() {
                 </a>
               </div>
             </div>
+
+            {/* Rate Driver Button - Show if delivered and not reviewed */}
+            {order.status === 'DELIVERED' && !order.review && (
+              <button
+                onClick={() => setShowRatingModal(true)}
+                className="w-full mt-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white py-3 rounded-xl font-semibold hover:from-yellow-500 hover:to-yellow-600 transition flex items-center justify-center gap-2 shadow-lg"
+              >
+                <Star className="w-5 h-5" />
+                Rate Your Driver
+              </button>
+            )}
+
+            {/* Show Review if already rated */}
+            {order.review && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium text-gray-700">Your Rating:</span>
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${
+                          i < order.review.rating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {order.review.comment && (
+                  <p className="text-sm text-gray-600 italic">"{order.review.comment}"</p>
+                )}
+              </div>
+            )}
+
+            {/* OTP Info */}
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs font-semibold text-gray-600">
               <div className="rounded-xl border border-[#EEF1FF] bg-[#F8F9FF] px-4 py-3">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400">Pickup OTP</p>
@@ -603,6 +659,17 @@ export default function OrderDetailPage() {
           currentUserRole="USER"
           isOpen={showChatModal}
           onClose={() => setShowChatModal(false)}
+        />
+      )}
+
+      {/* Rating Modal */}
+      {order && order.driver && (
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          onSubmit={handleSubmitReview}
+          driverName={order.driver.name || 'Your Driver'}
+          driverImage={order.driver.profileImage}
         />
       )}
     </div>

@@ -143,6 +143,9 @@ export const orderAPI = {
 
   cancelOrder: (id: string, reason?: string) =>
     api.put(`/api/orders/${id}/cancel`, { reason }),
+
+  submitReview: (id: string, rating: number, comment?: string, isAnonymous?: boolean) =>
+    api.post(`/api/orders/${id}/review`, { rating, comment, isAnonymous }),
 };
 
 // ============================================================================
