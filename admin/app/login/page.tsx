@@ -51,38 +51,38 @@ export default function LoginPage() {
     <div className="flex min-h-screen">
       {/* Left Side - ShareVan Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-b from-[#103EF7] to-[#091649] relative overflow-hidden rounded-r-3xl">
-        <div className="flex flex-col justify-start items-start px-12 xl:px-[70px] pt-[197px] pb-10 w-full">
+        <div className="flex flex-col justify-start items-start px-12 xl:px-[70px] pt-[100px] pb-10 w-full">
           {/* Text Content */}
-          <div className="flex flex-col gap-[6px] mb-[19px] max-w-[651px]">
-            <h1 className="text-white text-4xl xl:text-[50px] leading-tight xl:leading-[58px] font-medium font-inter">
+          <div className="flex flex-col gap-[6px] mb-[19px] max-w-[500px]">
+            <h1 className="text-white text-3xl xl:text-[40px] leading-tight xl:leading-[48px] font-medium font-inter">
               Move Smarter with ShareVan
             </h1>
-            <p className="text-[#F6F6F6] text-base xl:text-lg leading-relaxed xl:leading-[29px] font-normal font-inter">
+            <p className="text-[#F6F6F6] text-sm xl:text-base leading-relaxed xl:leading-[24px] font-normal font-inter">
               Choose your van, match with a trusted driver, track live, and get safe, same-day delivery across the UK.
             </p>
           </div>
 
-          {/* Phone Mockups - Hidden on smaller screens */}
-          <div className="relative w-full mt-auto hidden xl:block">
-            {/* First Phone */}
-            <div className="absolute left-[426px] top-[281px] w-[345.64px] h-[714px]">
+          {/* Phone Mockups - Positioned at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-start gap-6 px-12 xl:px-[70px] pb-0">
+            {/* First Phone (Left) - Touching bottom */}
+            <div className="relative">
               <Image
-                src="/images/iphone-1-173fa9.png"
+                src="/icons/image1.png"
                 alt="ShareVan App Screenshot 1"
-                width={346}
-                height={714}
+                width={260}
+                height={538}
                 className="object-contain"
                 priority
               />
             </div>
 
-            {/* Second Phone */}
-            <div className="absolute left-[50px] top-[587px] w-[345.64px] h-[714px]">
+            {/* Second Phone (Right) - Touching bottom */}
+            <div className="relative">
               <Image
-                src="/images/iphone-2-2e3893.png"
+                src="/icons/image2.png"
                 alt="ShareVan App Screenshot 2"
-                width={346}
-                height={714}
+                width={260}
+                height={538}
                 className="object-contain"
                 priority
               />
@@ -92,11 +92,11 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] px-6 sm:px-8 md:px-12 lg:px-[120px] py-10">
-        <div className="w-full max-w-[399px]">
-          <div className="flex flex-col gap-8 md:gap-[37px]">
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] px-6 sm:px-8 md:px-12 lg:px-20 py-10">
+        <div className="w-full max-w-[420px]">
+          <div className="flex flex-col gap-6 md:gap-8">
             {/* Title */}
-            <h2 className="text-black text-2xl md:text-[26px] leading-tight md:leading-[35.5px] font-semibold font-manrope">
+            <h2 className="text-black text-xl md:text-2xl leading-tight font-semibold font-manrope">
               Login to Admin Panel
             </h2>
 
