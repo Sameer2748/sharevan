@@ -63,7 +63,7 @@ export default function HomePage() {
             {/* Logo */}
             <div className="flex items-center">
               <div className=" px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
-                <span 
+                <span
                   className="text-white text-center"
                   style={{
                     fontFamily: 'Chillax, sans-serif',
@@ -78,11 +78,11 @@ export default function HomePage() {
                 </span>
               </div>
             </div>
-            
+
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
-              <Link 
-                href="#about" 
+              <Link
+                href="#about"
                 className="text-white hover:text-blue-200 transition-colors text-center"
                 style={{
                   fontFamily: 'Chillax, sans-serif',
@@ -95,11 +95,11 @@ export default function HomePage() {
               >
                 About
               </Link>
-              <Link 
-                href="#how-it-works" 
+              <Link
+                href="#how-it-works"
                 className="text-white hover:text-blue-200 transition-colors text-center"
                 style={{
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Chillax, sans-serif',
                   fontWeight: 400,
                   fontSize: '14px',
                   lineHeight: '140%',
@@ -109,11 +109,11 @@ export default function HomePage() {
               >
                 How It Works?
               </Link>
-              <Link 
-                href="#why-sharevan" 
+              <Link
+                href="#why-sharevan"
                 className="text-white hover:text-blue-200 transition-colors text-center"
                 style={{
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Chillax, sans-serif',
                   fontWeight: 400,
                   fontSize: '14px',
                   lineHeight: '140%',
@@ -123,11 +123,11 @@ export default function HomePage() {
               >
                 Why Choose Us
               </Link>
-              <Link 
-                href="/auth/login" 
+              <Link
+                href="/auth/login"
                 className="text-white hover:text-blue-200 transition-colors text-center"
                 style={{
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Chillax, sans-serif',
                   fontWeight: 400,
                   fontSize: '14px',
                   lineHeight: '140%',
@@ -157,12 +157,12 @@ export default function HomePage() {
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pt-4 border-t border-white/20">
               <nav className="flex flex-col gap-4 pb-2">
-                <Link 
-                  href="#about" 
+                <Link
+                  href="#about"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-white hover:text-blue-200 transition-colors py-2 text-center"
                   style={{
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Chillax, sans-serif',
                     fontWeight: 400,
                     fontSize: '14px',
                     lineHeight: '140%',
@@ -172,12 +172,12 @@ export default function HomePage() {
                 >
                   About
                 </Link>
-                <Link 
-                  href="#how-it-works" 
+                <Link
+                  href="#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-white hover:text-blue-200 transition-colors py-2 text-center"
                   style={{
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Chillax, sans-serif',
                     fontWeight: 400,
                     fontSize: '14px',
                     lineHeight: '140%',
@@ -187,12 +187,12 @@ export default function HomePage() {
                 >
                   How It Works?
                 </Link>
-                <Link 
-                  href="#why-sharevan" 
+                <Link
+                  href="#why-sharevan"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-white hover:text-blue-200 transition-colors py-2 text-center"
                   style={{
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Chillax, sans-serif',
                     fontWeight: 400,
                     fontSize: '14px',
                     lineHeight: '140%',
@@ -202,12 +202,12 @@ export default function HomePage() {
                 >
                   Why Choose Us
                 </Link>
-                <Link 
-                  href="/auth/login" 
+                <Link
+                  href="/auth/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-white hover:text-blue-200 transition-colors py-2 text-center"
                   style={{
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Chillax, sans-serif',
                     fontWeight: 400,
                     fontSize: '14px',
                     lineHeight: '140%',
@@ -228,16 +228,16 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
           {/* Text Content - Top Section */}
           <div className="text-white space-y-2 pt-4 pb-4 md:pt-6 lg:pt-8">
-            <h1  style={{
-                    fontFamily: 'Inter, sans-serif',
-                  }} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium  tracking-tight">
+            <h1 style={{
+              fontFamily: 'Inter, sans-serif',
+            }} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium  tracking-tight">
               Move Smarter with ShareVan
             </h1>
-            <p  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
 
-                  }} className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl">
+            }} className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl">
               Choose your van, match with a trusted driver, track live, and get safe, same-day delivery across the UK.
             </p>
             <div className="flex gap-4 pt-3">
@@ -377,10 +377,10 @@ export default function HomePage() {
               <div className="space-y-1">
                 <h3 className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">Step 1</h3>
                 <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
 
-                  }}  className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
+                }} className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
                   Book in Minutes - Tell us what you need to move, choose the van size, and select your pickup time.
                 </p>
               </div>
@@ -403,10 +403,10 @@ export default function HomePage() {
               <div className="space-y-1">
                 <h3 className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">Step 2</h3>
                 <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
 
-                  }}  className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
+                }} className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
                   Instant Driver Match - We connect you with a trusted local driver closest to your location.
                 </p>
               </div>
@@ -429,10 +429,10 @@ export default function HomePage() {
               <div className="space-y-1">
                 <h3 className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">Step 3</h3>
                 <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
 
-                  }}  className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
+                }} className="text-xs md:text-xs lg:text-sm text-gray-700 font-medium line-clamp-3">
                   Delivered On Time - Get your items moved swiftly and professionally, anywhere in the UK.
                 </p>
               </div>
@@ -463,15 +463,15 @@ export default function HomePage() {
               {/* Heading Section */}
               <div className="mb-4 lg:mb-5">
                 <h2 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
 
-                  }}  className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">Why ShareVan?</h2>
+                }} className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">Why ShareVan?</h2>
                 <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
 
-                  }}  className="text-sm md:text-base text-white/90">
+                }} className="text-sm md:text-base text-white/90">
                   Choose ShareVan and experience the UK's most dependable van-with-driver service
                 </p>
               </div>
@@ -483,7 +483,7 @@ export default function HomePage() {
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
 
-                  }}  className="text-base lg:text-lg font-bold text-white mb-1">Always Available</h3>
+                  }} className="text-base lg:text-lg font-bold text-white mb-1">Always Available</h3>
                   <p className="text-white/90 text-xs lg:text-sm leading-snug">
                     Need it now? Need it later? ShareVan offers round-the-clock availability, ensuring a van is always ready when you are.
                   </p>
@@ -554,36 +554,36 @@ export default function HomePage() {
       <section id="about" className="h-screen overflow-hidden flex items-center py-8 lg:py-12 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-6xl mx-auto w-full">
           <h2 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 500,
 
-                  }} className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 lg:mb-6">About Us</h2>
+          }} className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 lg:mb-6">About Us</h2>
 
           <div className="space-y-3 lg:space-y-4 text-gray-700 text-sm lg:text-base mb-6 lg:mb-8">
             <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
 
-                  }}>ShareVan is the UK's modern solution for fast, affordable and reliable van-with-driver services.</p>
+            }}>ShareVan is the UK's modern solution for fast, affordable and reliable van-with-driver services.</p>
             <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
 
-                  }}>
+            }}>
               Built with a mission to simplify moving and logistics, ShareVan combines smart technology with a trusted driver network to help individuals and businesses transport goods without stress.
             </p>
             <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
 
-                  }}>
+            }}>
               Whether it's a last-minute store pickup, a home relocation, furniture delivery, or business logistics, ShareVan ensures safe handling, transparent pricing and timely delivery. Our platform is designed to take the complexity out of moving—giving you a seamless, on-demand experience from start to finish.
             </p>
             <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
 
-                  }} className="font-semibold text-gray-900">Move smarter. Move easier. Move with ShareVan.</p>
+            }} className="font-semibold text-gray-900">Move smarter. Move easier. Move with ShareVan.</p>
           </div>
 
           {/* About Image */}
@@ -600,22 +600,22 @@ export default function HomePage() {
       </section>
 
       {/* Get in Touch Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="contact" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 500,
 
-                  }} className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 md:mb-12">
+          }} className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 md:mb-12">
             Get in Touch
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <div>
               <label style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              }} className="block text-sm font-medium text-gray-700 mb-2">Name</label>
               <input
                 type="text"
                 value={formData.name}
@@ -626,10 +626,10 @@ export default function HomePage() {
             </div>
             <div>
               <label style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              }} className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 value={formData.email}
@@ -640,10 +640,10 @@ export default function HomePage() {
             </div>
             <div>
               <label style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              }} className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
               <input
                 type="tel"
                 value={formData.phone}
@@ -654,10 +654,10 @@ export default function HomePage() {
             </div>
             <div className="md:col-span-1">
               <label style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+              }} className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
               <input
                 type="text"
                 value={formData.subject}
@@ -668,10 +668,10 @@ export default function HomePage() {
             </div>
             <div className="md:col-span-2">
               <label style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+              }} className="block text-sm font-medium text-gray-700 mb-2">Message</label>
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -699,7 +699,7 @@ export default function HomePage() {
           <div className="mb-8 md:hidden">
             <div className="flex items-center">
               <div className=" px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
-                <span 
+                <span
                   className="text-white text-center"
                   style={{
                     fontFamily: 'Chillax, sans-serif',
@@ -714,11 +714,11 @@ export default function HomePage() {
                 </span>
               </div>
             </div>
-                  <h3 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+            <h3 style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
 
-                  }} className="text-[#103EF7] font-bold text-2xl">ShareVan</h3>
+            }} className="text-[#103EF7] font-bold text-2xl">ShareVan</h3>
           </div>
 
           {/* Main Content Grid - Single grid with all 6 sections */}
@@ -726,10 +726,10 @@ export default function HomePage() {
             {/* Logo Column - Hidden on small, shows on md+ */}
             <div className="hidden md:block md:row-span-2">
               <h3 style={{
-                    fontFamily: 'Chillax, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Chillax, sans-serif',
+                fontWeight: 500,
 
-                  }} className="text-[#103EF7] font-bold text-2xl">ShareVan</h3>
+              }} className="text-[#103EF7] font-bold text-2xl">ShareVan</h3>
             </div>
 
 
@@ -737,90 +737,90 @@ export default function HomePage() {
             {/* Row 1, Col 3 (lg only) - ABOUT */}
             <div className="hidden lg:block">
               <h4 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">ABOUT</h4>
+              }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">ABOUT</h4>
               <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#about" className="hover:text-gray-900 transition-colors">Company</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Contact</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li>
+                <li><Link href="#contact" className="hover:text-gray-900 transition-colors">Contact</Link></li>
+                {/* <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li> */}
               </ul>
             </div>
 
             {/* Row 2, Col 1 - ABOUT (visible on small/md, hidden on lg) */}
             <div className="lg:hidden">
               <h4 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">ABOUT</h4>
+              }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">ABOUT</h4>
               <ul className="space-y-3 text-sm text-gray-600">
                 <li><Link href="#about" className="hover:text-gray-900 transition-colors">Company</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Contact</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li>
+                <li><Link href="#contact" className="hover:text-gray-900 transition-colors">Contact</Link></li>
+                {/* <li><Link href="#" className="hover:text-gray-900 transition-colors">Investors</Link></li> */}
               </ul>
             </div>
 
-           
+
 
             {/* Row 2, Col 3 (md+) - TERMS & PRIVACY */}
             <div className="hidden md:block">
               <h4 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">TERMS & PRIVACY</h4>
+              }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">TERMS & PRIVACY</h4>
               <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Trust & Safety</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
+                <li><p className="hover:text-gray-900 transition-colors">Trust & Safety</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Terms of Service</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Privacy Policy</p></li>
               </ul>
             </div>
 
             {/* Row 2, Col 4 (lg only) - RESOURCES */}
             <div className="hidden lg:block">
               <h4 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">RESOURCES</h4>
+              }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">RESOURCES</h4>
               <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Guides</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">FAQ</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Help Center</Link></li>
+                <li><p className="hover:text-gray-900 transition-colors">Blog</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Guides</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">FAQ</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Help Center</p></li>
               </ul>
             </div>
 
             {/* Row 3, Col 1 (small only) - TERMS & PRIVACY */}
             <div className="md:hidden">
               <h4 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">TERMS & PRIVACY</h4>
+              }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">TERMS & PRIVACY</h4>
               <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Trust & Safety</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
+                <li><p className="hover:text-gray-900 transition-colors">Trust & Safety</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Terms of Service</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Privacy Policy</p></li>
               </ul>
             </div>
 
             {/* Row 3, Col 2 - RESOURCES */}
             <div className="lg:hidden">
               <h4 style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
 
-                  }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">RESOURCES</h4>
+              }} className="font-bold text-gray-900 mb-4 text-sm tracking-wide">RESOURCES</h4>
               <ul className="space-y-3 text-sm text-gray-600">
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Guides</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">FAQ</Link></li>
-                <li><Link href="#" className="hover:text-gray-900 transition-colors">Help Center</Link></li>
+                <li><p className="hover:text-gray-900 transition-colors">Blog</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Guides</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">FAQ</p></li>
+                <li><p className="hover:text-gray-900 transition-colors">Help Center</p></li>
               </ul>
             </div>
           </div>
@@ -828,23 +828,19 @@ export default function HomePage() {
           {/* Bottom Bar */}
           <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
 
-                  }} className="text-sm text-gray-500">©2021 Estatery. All rights reserved</p>
+            }} className="text-sm text-gray-500">©2021 Estatery. All rights reserved</p>
             <div className="flex items-center gap-6">
-              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                <Facebook className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                <Instagram className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                <Twitter className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                <Linkedin className="w-5 h-5" />
-              </Link>
+
+              <Facebook className="w-5 h-5" />
+
+              <Instagram className="w-5 h-5" />
+
+              <Twitter className="w-5 h-5" />
+
+              <Linkedin className="w-5 h-5" />
             </div>
           </div>
         </div>
