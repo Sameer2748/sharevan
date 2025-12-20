@@ -8,7 +8,7 @@ import FontLoader from '@/components/FontLoader'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Sharevan - Your Logistics Partner',
+  title: 'ShareVan - Your Logistics Partner',
   description: 'Fast, reliable delivery service for all your logistics needs',
 }
 

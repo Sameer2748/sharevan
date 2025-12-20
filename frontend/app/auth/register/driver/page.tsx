@@ -161,7 +161,7 @@ export default function DriverRegistrationPage() {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Driver Registration</h1>
-            <p className="text-gray-600">Join Sharevan as a delivery partner</p>
+            <p className="text-gray-600">Join ShareVan as a delivery partner</p>
           </div>
 
           {/* Progress Steps */}

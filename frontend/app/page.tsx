@@ -74,7 +74,7 @@ export default function HomePage() {
                     textAlign: 'center'
                   }}
                 >
-                  sharevan
+                  ShareVan
                 </span>
               </div>
             </div>
@@ -466,7 +466,7 @@ export default function HomePage() {
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 400,
 
-                  }}  className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">Why Sharevan?</h2>
+                  }}  className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">Why ShareVan?</h2>
                 <p style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 400,
@@ -710,7 +710,7 @@ export default function HomePage() {
                     textAlign: 'center'
                   }}
                 >
-                  sharevan
+                  ShareVan
                 </span>
               </div>
             </div>
@@ -718,7 +718,7 @@ export default function HomePage() {
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
 
-                  }} className="text-[#103EF7] font-bold text-2xl">sharevan</h3>
+                  }} className="text-[#103EF7] font-bold text-2xl">ShareVan</h3>
           </div>
 
           {/* Main Content Grid - Single grid with all 6 sections */}
@@ -729,7 +729,7 @@ export default function HomePage() {
                     fontFamily: 'Chillax, sans-serif',
                     fontWeight: 500,
 
-                  }} className="text-[#103EF7] font-bold text-2xl">sharevan</h3>
+                  }} className="text-[#103EF7] font-bold text-2xl">ShareVan</h3>
             </div>
 
 

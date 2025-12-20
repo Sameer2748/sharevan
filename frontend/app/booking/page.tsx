@@ -887,7 +887,7 @@ export default function BookingPage() {
       {currentStep === 'driverAssigned' && (
         <div className="flex min-h-screen flex-col bg-gradient-to-b from-[#2563EB] via-[#3B82F6] to-[#60A5FA] text-white">
           <div className="px-6 pt-12 text-center">
-            <p className="text-[32px] font-bold tracking-wide">sharevan</p>
+            <p className="text-[32px] font-bold tracking-wide">ShareVan</p>
             <p className="text-xs uppercase tracking-[0.3em] text-white/80 mt-1">Your Logistics Partner</p>
           </div>
 

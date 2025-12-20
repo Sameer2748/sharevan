@@ -134,14 +134,14 @@ export default function LoginPage() {
         {/* Illustration */}
         <div className="relative flex-1 flex items-end justify-center overflow-hidden min-h-0">
           <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-1 text-white">
-            <p className="text-[22px] sm:text-[26px] font-semibold tracking-wide">sharevan</p>
+            <p className="text-[22px] sm:text-[26px] font-semibold tracking-wide">ShareVan</p>
             <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] text-white/75">
               Your Logistics Partner
             </p>
           </div>
           <Image
             src={loginIllustration}
-            alt="Sharevan Delivery Partner"
+            alt="ShareVan Delivery Partner"
             priority
             className="h-auto w-[420px] sm:w-[520px] max-w-none translate-y-20 sm:translate-y-28 object-contain drop-shadow-2xl"
           />

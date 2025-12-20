@@ -80,7 +80,7 @@ export default function Sidebar() {
               letterSpacing: '0%'
             }}
           >
-            sharevan
+            ShareVan
           </h1>
           <p
             className="text-[9px] text-[#103EF7]"

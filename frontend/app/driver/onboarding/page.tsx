@@ -212,7 +212,7 @@ export default function DriverOnboardingPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-bold text-primary">sharevan</h1>
+        <h1 className="text-2xl font-bold text-primary">ShareVan</h1>
         <p className="text-sm text-gray-600 mt-1">
           Complete Onboarding Process to Register Yourself as a Driver
         </p>

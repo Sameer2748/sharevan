@@ -400,7 +400,7 @@ export default function DriverDashboard() {
             >
               <Image
                 src={dashboardHero}
-                alt="Sharevan Hero"
+                alt="ShareVan Hero"
                 className="w-full h-auto object-contain"
                 priority
               />
